@@ -87,7 +87,7 @@ const navItems: NavItem[] = [
 
 // Custom Hook for Data Fetching Simulation
 function useDataFetcher<T>(initialData: T, refreshInterval: number = 5000): FetchState<T> {
-  const [state, setState] = useState<FetchState<T>({
+  const [state, setState] = useState<FetchState<T>>({
     data: initialData,
     loading: false,
     error: null,
