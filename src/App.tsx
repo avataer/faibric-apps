@@ -203,7 +203,7 @@ function Form({ fields, onSubmit, submitLabel }: FormProps) {
 
 // Data Fetcher Component
 function DataFetcher<T>({ fetchFn, children }: DataFetcherProps<T>) {
-  const [state, setState] = useState<FetchState<T>({ data: null, loading: true, error: null });
+  const [state, setState] = useState<FetchState<T>>({ data: null, loading: true, error: null });
 
   useEffect(() => {
     fetchFn()
