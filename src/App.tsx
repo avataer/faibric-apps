@@ -390,6 +390,8 @@ function App() {
           {downtimeData.data && <DowntimeTracker data={downtimeData.data} />}
         </div>
       </main>
+    </div>    </div>
+    </div>
     </div>
   );
 }
