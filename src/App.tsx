@@ -444,7 +444,9 @@ function App() {
         <DataTable data={teamMembers} type="team" />
         <DataTable data={tasks} type="tasks" />
       </div>
-    </Layout>
+    </Layout>    </div>
+    </div>
+    </div>
   );
 }
 
