@@ -1,213 +1,165 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
+
+// Interfaces
+interface NavItem {
+  id: string;
+  label: string;
+  icon: string;
+  active?: boolean;
+}
 
 interface Shipment {
   id: string;
   origin: string;
   destination: string;
-  status: "in-transit" | "delayed" | "delivered" | "pending";
-  estimatedArrival: string;
+  status: string;
+  eta: string;
   carrier: string;
-  containerCount: number;
 }
 
 interface InventoryItem {
   id: string;
-  productName: string;
+  product: string;
   warehouse: string;
   quantity: number;
-  reorderLevel: number;
   lastUpdated: string;
+  status: string;
 }
 
-interface PortDelay {
-  id: string;
-  portName: string;
-  country: string;
-  averageDelay: number;
-  congestionLevel: "low" | "medium" | "high" | "critical";
-  updatedAt: string;
+interface ChartDataPoint {
+  label: string;
+  value: number;
 }
 
-const sampleShipments: Shipment[] = [
-  {
-    id: "SHP001",
-    origin: "Shanghai, China",
-    destination: "Los Angeles, USA",
-    status: "in-transit",
-    estimatedArrival: "2024-02-15",
-    carrier: "Maersk",
-    containerCount: 45
-  },
-  {
-    id: "SHP002",
-    origin: "Rotterdam, Netherlands",
-    destination: "New York, USA",
-    status: "delayed",
-    estimatedArrival: "2024-02-18",
-    carrier: "MSC",
-    containerCount: 32
-  },
-  {
-    id: "SHP003",
-    origin: "Singapore",
-    destination: "Hamburg, Germany",
-    status: "delivered",
-    estimatedArrival: "2024-02-10",
-    carrier: "CMA CGM",
-    containerCount: 28
-  },
-  {
-    id: "SHP004",
-    origin: "Busan, South Korea",
-    destination: "Long Beach, USA",
-    status: "pending",
-    estimatedArrival: "2024-02-22",
-    carrier: "Evergreen",
-    containerCount: 52
-  },
-  {
-    id: "SHP005",
-    origin: "Dubai, UAE",
-    destination: "Mumbai, India",
-    status: "in-transit",
-    estimatedArrival: "2024-02-14",
-    carrier: "Hapag-Lloyd",
-    containerCount: 18
-  }
-];
-
-const sampleInventory: InventoryItem[] = [
-  { id: "INV001", productName: "Electronics Components", warehouse: "Los Angeles", quantity: 15000, reorderLevel: 5000, lastUpdated: "2024-02-10" },
-  { id: "INV002", productName: "Automotive Parts", warehouse: "Detroit", quantity: 3200, reorderLevel: 4000, lastUpdated: "2024-02-11" },
-  { id: "INV003", productName: "Textiles", warehouse: "New York", quantity: 28000, reorderLevel: 10000, lastUpdated: "2024-02-09" },
-  { id: "INV004", productName: "Medical Supplies", warehouse: "Chicago", quantity: 8500, reorderLevel: 3000, lastUpdated: "2024-02-11" },
-  { id: "INV005", productName: "Consumer Goods", warehouse: "Miami", quantity: 2100, reorderLevel: 5000, lastUpdated: "2024-02-10" }
-];
-
-const samplePortDelays: PortDelay[] = [
-  { id: "PRT001", portName: "Port of Los Angeles", country: "USA", averageDelay: 4.2, congestionLevel: "high", updatedAt: "2024-02-11" },
-  { id: "PRT002", portName: "Port of Shanghai", country: "China", averageDelay: 2.1, congestionLevel: "medium", updatedAt: "2024-02-11" },
-  { id: "PRT003", portName: "Port of Rotterdam", country: "Netherlands", averageDelay: 1.5, congestionLevel: "low", updatedAt: "2024-02-11" },
-  { id: "PRT004", portName: "Port of Singapore", country: "Singapore", averageDelay: 6.8, congestionLevel: "critical", updatedAt: "2024-02-11" },
-  { id: "PRT005", portName: "Port of Hamburg", country: "Germany", averageDelay: 2.8, congestionLevel: "medium", updatedAt: "2024-02-11" }
-];
-
-function StatusBadge(props: { status: Shipment["status"] }) {
-  const colorMap = {
-    "in-transit": "bg-blue-100 text-blue-800",
-    "delayed": "bg-red-100 text-red-800",
-    "delivered": "bg-green-100 text-green-800",
-    "pending": "bg-yellow-100 text-yellow-800"
-  };
-
+// Navigation Sidebar Component
+function NavigationSidebar({ items, onSelect, selectedId }: { items: NavItem[]; onSelect: (id: string) => void; selectedId: string }) {
   return (
-    <span className={`px-2 py-1 rounded-full text-xs font-medium ${colorMap[props.status]}`}>
-      {props.status.replace("-", " ").toUpperCase()}
-    </span>
-  );
-}
-
-function CongestionBadge(props: { level: PortDelay["congestionLevel"] }) {
-  const colorMap = {
-    low: "bg-green-100 text-green-800",
-    medium: "bg-yellow-100 text-yellow-800",
-    high: "bg-orange-100 text-orange-800",
-    critical: "bg-red-100 text-red-800"
-  };
-
-  return (
-    <span className={`px-2 py-1 rounded-full text-xs font-medium ${colorMap[props.level]}`}>
-      {props.level.toUpperCase()}
-    </span>
-  );
-}
-
-function StatCard(props: { title: string; value: string | number; icon: string; color: string }) {
-  return (
-    <div className="bg-white rounded-lg shadow p-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <p className="text-sm text-gray-500 font-medium">{props.title}</p>
-          <p className={`text-2xl font-bold ${props.color}`}>{props.value}</p>
+    <aside className="w-64 bg-slate-900 text-white h-screen fixed left-0 top-0 flex flex-col">
+      <div className="p-6 border-b border-slate-700">
+        <h1 className="text-xl font-bold flex items-center gap-2">
+          <span className="text-2xl">🌐</span>
+          Supply Chain Monitor
+        </h1>
+      </div>
+      <nav className="flex-1 p-4">
+        <ul className="space-y-2">
+          {items.map((item) => (
+            <li key={item.id}>
+              <button
+                onClick={() => onSelect(item.id)}
+                className={`w-full text-left px-4 py-3 rounded-lg flex items-center gap-3 transition-colors ${
+                  selectedId === item.id ? "bg-blue-600 text-white" : "hover:bg-slate-800 text-slate-300"
+                }`}
+              >
+                <span className="text-lg">{item.icon}</span>
+                <span>{item.label}</span>
+              </button>
+            </li>
+          ))}
+        </ul>
+      </nav>
+      <div className="p-4 border-t border-slate-700">
+        <div className="flex items-center gap-3 px-4 py-2">
+          <div className="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center">
+            <span className="text-sm font-bold">JD</span>
+          </div>
+          <div>
+            <p className="text-sm font-medium">John Doe</p>
+            <p className="text-xs text-slate-400">Admin</p>
+          </div>
         </div>
-        <div className="text-3xl">{props.icon}</div>
       </div>
+    </aside>
+  );
+}
+
+// Shipment List Component
+function ShipmentList({ shipments }: { shipments: Shipment[] }) {
+  const getStatusColor = (status: string) => {
+    switch (status) {
+      case "In Transit": return "bg-blue-100 text-blue-800";
+      case "Delivered": return "bg-green-100 text-green-800";
+      case "Delayed": return "bg-red-100 text-red-800";
+      case "Processing": return "bg-yellow-100 text-yellow-800";
+      default: return "bg-gray-100 text-gray-800";
+    }
+  };
+
+  return (
+    <div className="bg-white rounded-xl shadow-sm border border-gray-200">
+      <div className="p-6 border-b border-gray-200">
+        <h2 className="text-lg font-semibold text-gray-900">Active Shipments</h2>
+        <p className="text-sm text-gray-500 mt-1">Real-time tracking of ongoing deliveries</p>
+      </div>
+      <ul className="divide-y divide-gray-200">
+        {shipments.map((shipment) => (
+          <li key={shipment.id} className="p-4 hover:bg-gray-50 transition-colors">
+            <div className="flex items-center justify-between">
+              <div className="flex-1">
+                <div className="flex items-center gap-2">
+                  <span className="font-medium text-gray-900">{shipment.id}</span>
+                  <span className={`px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(shipment.status)}`}>
+                    {shipment.status}
+                  </span>
+                </div>
+                <p className="text-sm text-gray-600 mt-1">
+                  {shipment.origin} → {shipment.destination}
+                </p>
+                <p className="text-xs text-gray-400 mt-1">
+                  Carrier: {shipment.carrier} | ETA: {shipment.eta}
+                </p>
+              </div>
+              <button className="text-blue-600 hover:text-blue-800 text-sm font-medium">
+                Track →
+              </button>
+            </div>
+          </li>
+        ))}
+      </ul>
     </div>
   );
 }
 
-function ShipmentTable(props: { shipments: Shipment[] }) {
-  return (
-    <div className="bg-white rounded-lg shadow overflow-hidden">
-      <div className="px-6 py-4 border-b border-gray-200">
-        <h2 className="text-lg font-semibold text-gray-800">Active Shipments</h2>
-      </div>
-      <div className="overflow-x-auto">
-        <table className="min-w-full divide-y divide-gray-200">
-          <thead className="bg-gray-50">
-            <tr>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">ID</th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Route</th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Carrier</th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Containers</th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">ETA</th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Status</th>
-            </tr>
-          </thead>
-          <tbody className="bg-white divide-y divide-gray-200">
-            {props.shipments.map((shipment) => (
-              <tr key={shipment.id} className="hover:bg-gray-50">
-                <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{shipment.id}</td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
-                  <div>{shipment.origin}</div>
-                  <div className="text-gray-400">→ {shipment.destination}</div>
-                </td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">{shipment.carrier}</td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">{shipment.containerCount}</td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">{shipment.estimatedArrival}</td>
-                <td className="px-6 py-4 whitespace-nowrap">
-                  <StatusBadge status={shipment.status} />
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
-    </div>
-  );
-}
+// Inventory Table Component
+function InventoryTable({ items }: { items: InventoryItem[] }) {
+  const getStatusBadge = (status: string) => {
+    switch (status) {
+      case "In Stock": return "bg-green-100 text-green-800";
+      case "Low Stock": return "bg-yellow-100 text-yellow-800";
+      case "Out of Stock": return "bg-red-100 text-red-800";
+      default: return "bg-gray-100 text-gray-800";
+    }
+  };
 
-function InventoryTable(props: { inventory: InventoryItem[] }) {
   return (
-    <div className="bg-white rounded-lg shadow overflow-hidden">
-      <div className="px-6 py-4 border-b border-gray-200">
-        <h2 className="text-lg font-semibold text-gray-800">Inventory Levels</h2>
+    <div className="bg-white rounded-xl shadow-sm border border-gray-200">
+      <div className="p-6 border-b border-gray-200">
+        <h2 className="text-lg font-semibold text-gray-900">Warehouse Inventory</h2>
+        <p className="text-sm text-gray-500 mt-1">Current stock levels across all warehouses</p>
       </div>
       <div className="overflow-x-auto">
-        <table className="min-w-full divide-y divide-gray-200">
+        <table className="w-full">
           <thead className="bg-gray-50">
             <tr>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Product</th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Warehouse</th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Quantity</th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Status</th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Last Updated</th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Product</th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Warehouse</th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Quantity</th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Last Updated</th>
             </tr>
           </thead>
-          <tbody className="bg-white divide-y divide-gray-200">
-            {props.inventory.map((item) => (
+          <tbody className="divide-y divide-gray-200">
+            {items.map((item) => (
               <tr key={item.id} className="hover:bg-gray-50">
-                <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{item.productName}</td>
+                <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{item.product}</td>
                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">{item.warehouse}</td>
                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">{item.quantity.toLocaleString()}</td>
                 <td className="px-6 py-4 whitespace-nowrap">
-                  {item.quantity < item.reorderLevel ? (
-                    <span className="px-2 py-1 rounded-full text-xs font-medium bg-red-100 text-red-800">LOW STOCK</span>
-                  ) : (
-                    <span className="px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">IN STOCK</span>
-                  )}
+                  <span className={`px-2 py-1 rounded-full text-xs font-medium ${getStatusBadge(item.status)}`}>
+                    {item.status}
+                  </span>
                 </td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">{item.lastUpdated}</td>
+                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-400">{item.lastUpdated}</td>
               </tr>
             ))}
           </tbody>
@@ -217,119 +169,131 @@ function InventoryTable(props: { inventory: InventoryItem[] }) {
   );
 }
 
-function PortDelayCard(props: { delay: PortDelay }) {
+// Delay Chart Component
+function DelayChart({ data }: { data: ChartDataPoint[] }) {
+  const maxValue = Math.max(...data.map(d => d.value));
+
   return (
-    <div className="bg-white rounded-lg shadow p-4 border-l-4 border-blue-500">
-      <div className="flex justify-between items-start mb-2">
-        <h3 className="font-semibold text-gray-800">{props.delay.portName}</h3>
-        <CongestionBadge level={props.delay.congestionLevel} />
+    <div className="bg-white rounded-xl shadow-sm border border-gray-200">
+      <div className="p-6 border-b border-gray-200">
+        <h2 className="text-lg font-semibold text-gray-900">Delivery Delays (Last 7 Days)</h2>
+        <p className="text-sm text-gray-500 mt-1">Average delay in hours by day</p>
       </div>
-      <p className="text-sm text-gray-500 mb-2">{props.delay.country}</p>
-      <div className="flex justify-between items-center">
-        <span className="text-sm text-gray-600">Avg Delay:</span>
-        <span className="text-lg font-bold text-orange-600">{props.delay.averageDelay} days</span>
+      <div className="p-6">
+        <div className="flex items-end justify-between gap-2 h-48">
+          {data.map((point, index) => (
+            <div key={index} className="flex flex-col items-center flex-1">
+              <div className="w-full flex flex-col items-center">
+                <span className="text-xs font-medium text-gray-700 mb-1">{point.value}h</span>
+                <div
+                  className="w-full bg-gradient-to-t from-blue-600 to-blue-400 rounded-t-md transition-all hover:from-blue-700 hover:to-blue-500"
+                  style={{ height: `${(point.value / maxValue) * 150}px` }}
+                />
+              </div>
+              <span className="text-xs text-gray-500 mt-2">{point.label}</span>
+            </div>
+          ))}
+        </div>
       </div>
-      <p className="text-xs text-gray-400 mt-2">Updated: {props.delay.updatedAt}</p>
     </div>
   );
 }
 
+// Main App Component
 function App() {
-  const [activeTab, setActiveTab] = useState("overview");
+  const [selectedNav, setSelectedNav] = useState("dashboard");
+  const [lastUpdate, setLastUpdate] = useState(new Date().toLocaleTimeString());
 
-  const inTransitCount = sampleShipments.filter(s => s.status === "in-transit").length;
-  const delayedCount = sampleShipments.filter(s => s.status === "delayed").length;
-  const lowStockCount = sampleInventory.filter(i => i.quantity < i.reorderLevel).length;
-  const criticalPorts = samplePortDelays.filter(p => p.congestionLevel === "critical" || p.congestionLevel === "high").length;
+  const navItems: NavItem[] = [
+    { id: "dashboard", label: "Dashboard", icon: "📊" },
+    { id: "shipments", label: "Shipments", icon: "🚚" },
+    { id: "inventory", label: "Inventory", icon: "📦" },
+    { id: "analytics", label: "Analytics", icon: "📈" },
+    { id: "settings", label: "Settings", icon: "⚙️" },
+  ];
+
+  const shipments: Shipment[] = [
+    { id: "SHP-001", origin: "Shanghai", destination: "Los Angeles", status: "In Transit", eta: "Dec 28, 2024", carrier: "Maersk" },
+    { id: "SHP-002", origin: "Rotterdam", destination: "New York", status: "Delayed", eta: "Dec 30, 2024", carrier: "MSC" },
+    { id: "SHP-003", origin: "Singapore", destination: "Sydney", status: "Processing", eta: "Jan 02, 2025", carrier: "Hapag-Lloyd" },
+    { id: "SHP-004", origin: "Hamburg", destination: "Tokyo", status: "In Transit", eta: "Jan 05, 2025", carrier: "Evergreen" },
+    { id: "SHP-005", origin: "Busan", destination: "Vancouver", status: "Delivered", eta: "Dec 20, 2024", carrier: "COSCO" },
+  ];
+
+  const inventory: InventoryItem[] = [
+    { id: "INV-001", product: "Electronics - Smartphones", warehouse: "Los Angeles, CA", quantity: 15420, status: "In Stock", lastUpdated: "2 min ago" },
+    { id: "INV-002", product: "Automotive Parts", warehouse: "Detroit, MI", quantity: 8750, status: "In Stock", lastUpdated: "5 min ago" },
+    { id: "INV-003", product: "Medical Supplies", warehouse: "Chicago, IL", quantity: 320, status: "Low Stock", lastUpdated: "1 min ago" },
+    { id: "INV-004", product: "Consumer Goods", warehouse: "Dallas, TX", quantity: 22100, status: "In Stock", lastUpdated: "8 min ago" },
+    { id: "INV-005", product: "Industrial Equipment", warehouse: "Seattle, WA", quantity: 0, status: "Out of Stock", lastUpdated: "15 min ago" },
+  ];
+
+  const delayData: ChartDataPoint[] = [
+    { label: "Mon", value: 2.5 },
+    { label: "Tue", value: 4.2 },
+    { label: "Wed", value: 3.1 },
+    { label: "Thu", value: 5.8 },
+    { label: "Fri", value: 3.9 },
+    { label: "Sat", value: 2.1 },
+    { label: "Sun", value: 1.8 },
+  ];
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setLastUpdate(new Date().toLocaleTimeString());
+    }, 30000);
+    return () => clearInterval(interval);
+  }, []);
 
   return (
     <div className="min-h-screen bg-gray-100">
-      <nav className="bg-indigo-700 text-white shadow-lg">
-        <div className="max-w-7xl mx-auto px-4 py-4">
+      <NavigationSidebar items={navItems} onSelect={setSelectedNav} selectedId={selectedNav} />
+      <main className="ml-64 p-8">
+        <div className="mb-8">
           <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-2">
-              <span className="text-2xl">🌐</span>
-              <h1 className="text-xl font-bold">Global Supply Chain Monitor</h1>
+            <div>
+              <h1 className="text-2xl font-bold text-gray-900">Global Supply Chain Monitor</h1>
+              <p className="text-gray-500 mt-1">Real-time visibility across your entire supply chain</p>
             </div>
-            <div className="text-sm">Last Sync: {new Date().toLocaleString()}</div>
-          </div>
-        </div>
-      </nav>
-
-      <div className="max-w-7xl mx-auto px-4 py-6">
-        <div className="flex space-x-4 mb-6">
-          <button
-            onClick={() => setActiveTab("overview")}
-            className={`px-4 py-2 rounded-lg font-medium transition ${activeTab === "overview" ? "bg-indigo-600 text-white" : "bg-white text-gray-700 hover:bg-gray-50"}`}
-          >
-            Overview
-          </button>
-          <button
-            onClick={() => setActiveTab("shipments")}
-            className={`px-4 py-2 rounded-lg font-medium transition ${activeTab === "shipments" ? "bg-indigo-600 text-white" : "bg-white text-gray-700 hover:bg-gray-50"}`}
-          >
-            Shipments
-          </button>
-          <button
-            onClick={() => setActiveTab("inventory")}
-            className={`px-4 py-2 rounded-lg font-medium transition ${activeTab === "inventory" ? "bg-indigo-600 text-white" : "bg-white text-gray-700 hover:bg-gray-50"}`}
-          >
-            Inventory
-          </button>
-          <button
-            onClick={() => setActiveTab("ports")}
-            className={`px-4 py-2 rounded-lg font-medium transition ${activeTab === "ports" ? "bg-indigo-600 text-white" : "bg-white text-gray-700 hover:bg-gray-50"}`}
-          >
-            Port Delays
-          </button>
-        </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-          <StatCard title="Shipments In Transit" value={inTransitCount} icon="🚢" color="text-blue-600" />
-          <StatCard title="Delayed Shipments" value={delayedCount} icon="⚠️" color="text-red-600" />
-          <StatCard title="Low Stock Alerts" value={lowStockCount} icon="📦" color="text-orange-600" />
-          <StatCard title="Congested Ports" value={criticalPorts} icon="🏭" color="text-purple-600" />
-        </div>
-
-        {activeTab === "overview" && (
-          <div className="space-y-6">
-            <ShipmentTable shipments={sampleShipments} />
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              <InventoryTable inventory={sampleInventory} />
-              <div className="bg-white rounded-lg shadow p-6">
-                <h2 className="text-lg font-semibold text-gray-800 mb-4">Port Congestion Alerts</h2>
-                <div className="space-y-4">
-                  {samplePortDelays.slice(0, 3).map((delay) => (
-                    <PortDelayCard key={delay.id} delay={delay} />
-                  ))}
-                </div>
+            <div className="flex items-center gap-4">
+              <span className="text-sm text-gray-500">Last updated: {lastUpdate}</span>
+              <div className="flex items-center gap-2">
+                <span className="w-2 h-2 bg-green-500 rounded-full animate-pulse" />
+                <span className="text-sm text-green-600 font-medium">Live</span>
               </div>
             </div>
           </div>
-        )}
-
-        {activeTab === "shipments" && (
-          <ShipmentTable shipments={sampleShipments} />
-        )}
-
-        {activeTab === "inventory" && (
-          <InventoryTable inventory={sampleInventory} />
-        )}
-
-        {activeTab === "ports" && (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {samplePortDelays.map((delay) => (
-              <PortDelayCard key={delay.id} delay={delay} />
-            ))}
-          </div>
-        )}
-      </div>
-
-      <footer className="bg-gray-800 text-white py-4 mt-8">
-        <div className="max-w-7xl mx-auto px-4 text-center text-sm">
-          Global Supply Chain Monitor © 2024 | Real-time logistics tracking and analytics
         </div>
-      </footer>
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+          <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-200">
+            <p className="text-sm text-gray-500">Active Shipments</p>
+            <p className="text-3xl font-bold text-gray-900 mt-2">127</p>
+            <p className="text-sm text-green-600 mt-1">↑ 12% from last week</p>
+          </div>
+          <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-200">
+            <p className="text-sm text-gray-500">On-Time Delivery</p>
+            <p className="text-3xl font-bold text-gray-900 mt-2">94.2%</p>
+            <p className="text-sm text-green-600 mt-1">↑ 2.1% improvement</p>
+          </div>
+          <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-200">
+            <p className="text-sm text-gray-500">Delayed Shipments</p>
+            <p className="text-3xl font-bold text-gray-900 mt-2">8</p>
+            <p className="text-sm text-red-600 mt-1">↑ 3 more than yesterday</p>
+          </div>
+          <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-200">
+            <p className="text-sm text-gray-500">Total Inventory Value</p>
+            <p className="text-3xl font-bold text-gray-900 mt-2">$2.4M</p>
+            <p className="text-sm text-gray-500 mt-1">Across 5 warehouses</p>
+          </div>
+        </div>
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
+          <ShipmentList shipments={shipments} />
+          <DelayChart data={delayData} />
+        </div>
+        <div>
+          <InventoryTable items={inventory} />
+        </div>
+      </main>
     </div>
   );
 }
