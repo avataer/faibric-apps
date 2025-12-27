@@ -1,13 +1,24 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 
-// Interfaces for Card Component
+// Interfaces
+interface NavItem {
+  label: string;
+  href: string;
+  active?: boolean;
+}
+
+interface NavigationHeaderProps {
+  title: string;
+  items: NavItem[];
+  onNavClick: (item: NavItem) => void;
+}
+
 interface CardProps {
   title: string;
   children: React.ReactNode;
   className?: string;
 }
 
-// Interfaces for Table Component
 interface TableColumn {
   key: string;
   header: string;
@@ -21,34 +32,27 @@ interface TableRow {
 interface TableProps {
   columns: TableColumn[];
   data: TableRow[];
-  className?: string;
+  onRowClick?: (row: TableRow) => void;
 }
 
-// Interfaces for Chart Component
 interface ChartDataPoint {
   label: string;
   value: number;
 }
 
-interface ChartSeries {
-  name: string;
+interface ChartLineProps {
   data: ChartDataPoint[];
-  color: string;
-}
-
-interface LineChartProps {
-  series: ChartSeries[];
   title: string;
+  color?: string;
   height?: number;
 }
 
-// Interfaces for Form Component
 interface FormField {
   name: string;
   label: string;
   type: "text" | "select" | "textarea";
   options?: string[];
-  required?: boolean;
+  placeholder?: string;
 }
 
 interface FormProps {
@@ -57,37 +61,75 @@ interface FormProps {
   submitLabel: string;
 }
 
-// Interfaces for Data Fetcher
-interface FetchState<T> {
-  data: T | null;
-  loading: boolean;
-  error: string | null;
+interface Competitor {
+  name: string;
+  marketShare: number;
+  strengths: string[];
+  weaknesses: string[];
+  rating: number;
 }
 
-interface DataFetcherProps<T> {
-  fetchFn: () => Promise<T>;
-  children: (state: FetchState<T>) => React.ReactNode;
+interface SurveyResult {
+  question: string;
+  responses: number;
+  positive: number;
+  neutral: number;
+  negative: number;
+}
+
+// Navigation Header Component
+function NavigationHeader({ title, items, onNavClick }: NavigationHeaderProps) {
+  return (
+    <header className="bg-gradient-to-r from-indigo-600 to-purple-600 text-white shadow-lg">
+      <div className="max-w-7xl mx-auto px-4 py-4">
+        <div className="flex items-center justify-between">
+          <h1 className="text-2xl font-bold">{title}</h1>
+          <nav className="flex space-x-6">
+            {items.map((item) => (
+              <button
+                key={item.label}
+                onClick={() => onNavClick(item)}
+                className={`px-4 py-2 rounded-lg transition-all duration-200 ${
+                  item.active
+                    ? "bg-white/20 font-semibold"
+                    : "hover:bg-white/10"
+                }`}
+              >
+                {item.label}
+              </button>
+            ))}
+          </nav>
+        </div>
+      </div>
+    </header>
+  );
 }
 
 // Card Component
 function Card({ title, children, className = "" }: CardProps) {
   return (
-    <div className={`bg-white rounded-xl shadow-lg p-6 ${className}`}>
-      <h3 className="text-lg font-semibold text-gray-800 mb-4 border-b pb-2">{title}</h3>
-      {children}
+    <div className={`bg-white rounded-xl shadow-md overflow-hidden ${className}`}>
+      <div className="px-6 py-4 border-b border-gray-100">
+        <h3 className="text-lg font-semibold text-gray-800">{title}</h3>
+      </div>
+      <div className="p-6">{children}</div>
     </div>
   );
 }
 
 // Table Component
-function Table({ columns, data, className = "" }: TableProps) {
+function Table({ columns, data, onRowClick }: TableProps) {
   return (
-    <div className={`overflow-x-auto ${className}`}>
-      <table className="w-full text-sm">
+    <div className="overflow-x-auto">
+      <table className="w-full">
         <thead>
           <tr className="bg-gray-50">
             {columns.map((col) => (
-              <th key={col.key} className="px-4 py-3 text-left font-semibold text-gray-700" style={{ width: col.width }}>
+              <th
+                key={col.key}
+                className="px-4 py-3 text-left text-sm font-semibold text-gray-600"
+                style={{ width: col.width }}
+              >
                 {col.header}
               </th>
             ))}
@@ -95,9 +137,13 @@ function Table({ columns, data, className = "" }: TableProps) {
         </thead>
         <tbody>
           {data.map((row, idx) => (
-            <tr key={idx} className="border-b hover:bg-gray-50 transition-colors">
+            <tr
+              key={idx}
+              onClick={() => onRowClick?.(row)}
+              className="border-b border-gray-100 hover:bg-gray-50 cursor-pointer transition-colors"
+            >
               {columns.map((col) => (
-                <td key={col.key} className="px-4 py-3 text-gray-600">
+                <td key={col.key} className="px-4 py-3 text-sm text-gray-700">
                   {row[col.key]}
                 </td>
               ))}
@@ -110,243 +156,260 @@ function Table({ columns, data, className = "" }: TableProps) {
 }
 
 // Line Chart Component
-function LineChart({ series, title, height = 200 }: LineChartProps) {
-  const allValues = series.flatMap((s) => s.data.map((d) => d.value));
-  const maxValue = Math.max(...allValues);
-  const minValue = Math.min(...allValues);
+function ChartLine({ data, title, color = "#6366f1", height = 200 }: ChartLineProps) {
+  const maxValue = Math.max(...data.map((d) => d.value));
+  const minValue = Math.min(...data.map((d) => d.value));
   const range = maxValue - minValue || 1;
+  const padding = 40;
 
-  const labels = series[0]?.data.map((d) => d.label) || [];
+  const points = data.map((d, i) => ({
+    x: padding + (i * (300 - 2 * padding)) / (data.length - 1),
+    y: height - padding - ((d.value - minValue) / range) * (height - 2 * padding),
+  }));
+
+  const pathD = points
+    .map((p, i) => `${i === 0 ? "M" : "L"} ${p.x} ${p.y}`)
+    .join(" ");
 
   return (
-    <div className="w-full">
-      <h4 className="text-sm font-medium text-gray-700 mb-4">{title}</h4>
-      <div className="relative" style={{ height }}>
-        <svg className="w-full h-full" viewBox={`0 0 400 ${height}`} preserveAspectRatio="none">
-          {[0, 25, 50, 75, 100].map((pct) => (
-            <line key={pct} x1="40" y1={height - 20 - (pct / 100) * (height - 40)} x2="390" y2={height - 20 - (pct / 100) * (height - 40)} stroke="#e5e7eb" strokeWidth="1" />
-          ))}
-          {series.map((s, sIdx) => {
-            const points = s.data.map((d, i) => {
-              const x = 40 + (i / (s.data.length - 1)) * 350;
-              const y = height - 20 - ((d.value - minValue) / range) * (height - 40);
-              return `${x},${y}`;
-            }).join(" ");
-            return (
-              <g key={sIdx}>
-                <polyline fill="none" stroke={s.color} strokeWidth="2" points={points} />
-                {s.data.map((d, i) => {
-                  const x = 40 + (i / (s.data.length - 1)) * 350;
-                  const y = height - 20 - ((d.value - minValue) / range) * (height - 40);
-                  return <circle key={i} cx={x} cy={y} r="4" fill={s.color} />;
-                })}
-              </g>
-            );
-          })}
-        </svg>
-        <div className="flex justify-between px-10 text-xs text-gray-500 mt-1">
-          {labels.map((label, i) => (
-            <span key={i}>{label}</span>
-          ))}
-        </div>
-      </div>
-      <div className="flex gap-4 mt-4 justify-center">
-        {series.map((s, i) => (
-          <div key={i} className="flex items-center gap-2">
-            <div className="w-3 h-3 rounded-full" style={{ backgroundColor: s.color }} />
-            <span className="text-xs text-gray-600">{s.name}</span>
-          </div>
+    <div>
+      <h4 className="text-sm font-medium text-gray-600 mb-3">{title}</h4>
+      <svg viewBox={`0 0 300 ${height}`} className="w-full">
+        <path d={pathD} fill="none" stroke={color} strokeWidth="2" />
+        {points.map((p, i) => (
+          <g key={i}>
+            <circle cx={p.x} cy={p.y} r="4" fill={color} />
+            <text
+              x={p.x}
+              y={height - 10}
+              textAnchor="middle"
+              className="text-xs fill-gray-500"
+            >
+              {data[i].label}
+            </text>
+          </g>
         ))}
-      </div>
+      </svg>
     </div>
   );
 }
 
 // Form Component
 function Form({ fields, onSubmit, submitLabel }: FormProps) {
-  const [formData, setFormData] = useState<Record<string, string>({});
+  const [formData, setFormData] = useState<Record<string, string>>({});
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     onSubmit(formData);
   };
 
-  const handleChange = (name: string, value: string) => {
-    setFormData((prev) => ({ ...prev, [name]: value }));
-  };
-
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
       {fields.map((field) => (
         <div key={field.name}>
-          <label className="block text-sm font-medium text-gray-700 mb-1">{field.label}</label>
+          <label className="block text-sm font-medium text-gray-700 mb-1">
+            {field.label}
+          </label>
           {field.type === "select" ? (
-            <select className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500" onChange={(e) => handleChange(field.name, e.target.value)} required={field.required}>
-              <option value="">Select an option</option>
+            <select
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+              onChange={(e) => setFormData({ ...formData, [field.name]: e.target.value })}
+            >
+              <option value="">Select...</option>
               {field.options?.map((opt) => (
                 <option key={opt} value={opt}>{opt}</option>
               ))}
             </select>
           ) : field.type === "textarea" ? (
-            <textarea className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 resize-none" rows={3} onChange={(e) => handleChange(field.name, e.target.value)} required={field.required} />
+            <textarea
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+              placeholder={field.placeholder}
+              rows={3}
+              onChange={(e) => setFormData({ ...formData, [field.name]: e.target.value })}
+            />
           ) : (
-            <input type="text" className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500" onChange={(e) => handleChange(field.name, e.target.value)} required={field.required} />
+            <input
+              type="text"
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+              placeholder={field.placeholder}
+              onChange={(e) => setFormData({ ...formData, [field.name]: e.target.value })}
+            />
           )}
         </div>
       ))}
-      <button type="submit" className="w-full bg-blue-600 text-white py-2 px-4 rounded-lg hover:bg-blue-700 transition-colors font-medium">
+      <button
+        type="submit"
+        className="w-full bg-indigo-600 text-white py-2 px-4 rounded-lg hover:bg-indigo-700 transition-colors font-medium"
+      >
         {submitLabel}
       </button>
     </form>
   );
 }
 
-// Data Fetcher Component
-function DataFetcher<T>({ fetchFn, children }: DataFetcherProps<T>) {
-  const [state, setState] = useState<FetchState<T>>({ data: null, loading: true, error: null });
-
-  useEffect(() => {
-    fetchFn()
-      .then((data) => setState({ data, loading: false, error: null }))
-      .catch((err) => setState({ data: null, loading: false, error: err.message }));
-  }, [fetchFn]);
-
-  return <>{children(state)}</>;
+// Competitor Card Component
+function CompetitorCard({ competitor }: { competitor: Competitor }) {
+  return (
+    <Card title={competitor.name}>
+      <div className="space-y-4">
+        <div className="flex items-center justify-between">
+          <span className="text-sm text-gray-500">Market Share</span>
+          <span className="text-lg font-bold text-indigo-600">{competitor.marketShare}%</span>
+        </div>
+        <div className="w-full bg-gray-200 rounded-full h-2">
+          <div
+            className="bg-indigo-600 h-2 rounded-full"
+            style={{ width: `${competitor.marketShare}%` }}
+          />
+        </div>
+        <div className="flex items-center gap-1">
+          {[1, 2, 3, 4, 5].map((star) => (
+            <span key={star} className={star <= competitor.rating ? "text-yellow-400" : "text-gray-300"}>
+              ★
+            </span>
+          ))}
+        </div>
+        <div>
+          <p className="text-sm font-medium text-green-600 mb-1">Strengths</p>
+          <ul className="text-sm text-gray-600 list-disc list-inside">
+            {competitor.strengths.map((s) => <li key={s}>{s}</li>)}
+          </ul>
+        </div>
+        <div>
+          <p className="text-sm font-medium text-red-600 mb-1">Weaknesses</p>
+          <ul className="text-sm text-gray-600 list-disc list-inside">
+            {competitor.weaknesses.map((w) => <li key={w}>{w}</li>)}
+          </ul>
+        </div>
+      </div>
+    </Card>
+  );
 }
 
-// Sample Data
-const surveyResults = [
-  { question: "Product Satisfaction", veryHappy: 45, happy: 30, neutral: 15, unhappy: 10 },
-  { question: "Price Perception", veryHappy: 25, happy: 35, neutral: 25, unhappy: 15 },
-  { question: "Customer Support", veryHappy: 50, happy: 28, neutral: 12, unhappy: 10 },
-  { question: "Would Recommend", veryHappy: 55, happy: 25, neutral: 12, unhappy: 8 },
-];
-
-const competitors = [
-  { name: "CompetitorA", marketShare: "32%", strength: "Brand Recognition", weakness: "High Pricing", rating: 4.2 },
-  { name: "CompetitorB", marketShare: "24%", strength: "Innovation", weakness: "Limited Support", rating: 3.8 },
-  { name: "CompetitorC", marketShare: "18%", strength: "Low Cost", weakness: "Quality Issues", rating: 3.5 },
-];
-
-const trendData: ChartSeries[] = [
-  { name: "Market Size ($B)", color: "#3b82f6", data: [{ label: "Q1", value: 12 }, { label: "Q2", value: 15 }, { label: "Q3", value: 18 }, { label: "Q4", value: 22 }] },
-  { name: "Our Revenue ($M)", color: "#10b981", data: [{ label: "Q1", value: 8 }, { label: "Q2", value: 12 }, { label: "Q3", value: 14 }, { label: "Q4", value: 19 }] },
-];
-
-const surveyTableColumns: TableColumn[] = [
-  { key: "question", header: "Question", width: "40%" },
-  { key: "veryHappy", header: "Very Happy %" },
-  { key: "happy", header: "Happy %" },
-  { key: "neutral", header: "Neutral %" },
-  { key: "unhappy", header: "Unhappy %" },
-];
-
-const exportFormFields: FormField[] = [
-  { name: "format", label: "Export Format", type: "select", options: ["CSV", "JSON", "PDF", "Excel"], required: true },
-  { name: "dateRange", label: "Date Range", type: "select", options: ["Last 7 Days", "Last 30 Days", "Last Quarter", "All Time"], required: true },
-  { name: "notes", label: "Additional Notes", type: "textarea", required: false },
-];
-
+// Main App Component
 function App() {
-  const [exportStatus, setExportStatus] = useState<string>("");
+  const [activeNav, setActiveNav] = useState("Dashboard");
+
+  const navItems: NavItem[] = [
+    { label: "Dashboard", href: "#", active: activeNav === "Dashboard" },
+    { label: "Surveys", href: "#", active: activeNav === "Surveys" },
+    { label: "Competitors", href: "#", active: activeNav === "Competitors" },
+    { label: "Reports", href: "#", active: activeNav === "Reports" },
+  ];
+
+  const surveyResults: SurveyResult[] = [
+    { question: "Product Satisfaction", responses: 1250, positive: 78, neutral: 15, negative: 7 },
+    { question: "Brand Awareness", responses: 980, positive: 65, neutral: 25, negative: 10 },
+    { question: "Purchase Intent", responses: 850, positive: 72, neutral: 18, negative: 10 },
+    { question: "Customer Service", responses: 1100, positive: 82, neutral: 12, negative: 6 },
+  ];
+
+  const competitors: Competitor[] = [
+    {
+      name: "TechCorp Solutions",
+      marketShare: 32,
+      strengths: ["Strong brand recognition", "Wide distribution"],
+      weaknesses: ["Higher pricing", "Slow innovation"],
+      rating: 4,
+    },
+    {
+      name: "InnovatePro Inc",
+      marketShare: 24,
+      strengths: ["Cutting-edge technology", "Great UX"],
+      weaknesses: ["Limited market reach", "Small team"],
+      rating: 4,
+    },
+    {
+      name: "MarketLeader Ltd",
+      marketShare: 28,
+      strengths: ["Established customer base", "Reliable service"],
+      weaknesses: ["Outdated interface", "Poor mobile support"],
+      rating: 3,
+    },
+  ];
+
+  const trendData: ChartDataPoint[] = [
+    { label: "Jan", value: 45 },
+    { label: "Feb", value: 52 },
+    { label: "Mar", value: 48 },
+    { label: "Apr", value: 61 },
+    { label: "May", value: 55 },
+    { label: "Jun", value: 67 },
+  ];
+
+  const tableColumns: TableColumn[] = [
+    { key: "question", header: "Survey Question", width: "40%" },
+    { key: "responses", header: "Responses" },
+    { key: "positive", header: "Positive %" },
+    { key: "neutral", header: "Neutral %" },
+    { key: "negative", header: "Negative %" },
+  ];
+
+  const tableData = surveyResults.map((r) => ({
+    question: r.question,
+    responses: r.responses,
+    positive: `${r.positive}%`,
+    neutral: `${r.neutral}%`,
+    negative: `${r.negative}%`,
+  }));
+
+  const exportFormFields: FormField[] = [
+    { name: "format", label: "Export Format", type: "select", options: ["CSV", "Excel", "PDF", "JSON"] },
+    { name: "dateRange", label: "Date Range", type: "select", options: ["Last 7 days", "Last 30 days", "Last 90 days", "Custom"] },
+    { name: "notes", label: "Additional Notes", type: "textarea", placeholder: "Add any notes for this export..." },
+  ];
 
   const handleExport = (data: Record<string, string>) => {
-    setExportStatus(`Exporting ${data.format} for ${data.dateRange}...`);
-    setTimeout(() => setExportStatus("Export completed successfully!"), 1500);
+    alert(`Exporting data as ${data.format || "CSV"} for ${data.dateRange || "Last 30 days"}`);
   };
 
-  const fetchMarketData = React.useCallback(() => {
-    return new Promise<{ lastUpdated: string; totalResponses: number }>((resolve) => {
-      setTimeout(() => resolve({ lastUpdated: "2024-01-15", totalResponses: 1247 }), 500);
-    });
-  }, []);
-
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-100 to-slate-200 p-8">
-      <header className="mb-8">
-        <h1 className="text-3xl font-bold text-gray-900">Market Research Dashboard</h1>
-        <p className="text-gray-600 mt-2">Comprehensive analysis of market trends, survey results, and competitor landscape</p>
-      </header>
+    <div className="min-h-screen bg-gray-100">
+      <NavigationHeader
+        title="Market Research Hub"
+        items={navItems}
+        onNavClick={(item) => setActiveNav(item.label)}
+      />
 
-      <DataFetcher fetchFn={fetchMarketData}>
-        {({ data, loading }) => (
-          <div className="mb-6 flex gap-4">
-            <div className="bg-blue-600 text-white px-4 py-2 rounded-lg">
-              <span className="text-sm opacity-80">Total Responses</span>
-              <p className="text-xl font-bold">{loading ? "..." : data?.totalResponses}</p>
-            </div>
-            <div className="bg-green-600 text-white px-4 py-2 rounded-lg">
-              <span className="text-sm opacity-80">Last Updated</span>
-              <p className="text-xl font-bold">{loading ? "..." : data?.lastUpdated}</p>
-            </div>
+      <main className="max-w-7xl mx-auto px-4 py-8">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
+          <div className="lg:col-span-2">
+            <Card title="Survey Results Overview">
+              <Table columns={tableColumns} data={tableData} />
+            </Card>
           </div>
-        )}
-      </DataFetcher>
+          <div>
+            <Card title="Export Data">
+              <Form fields={exportFormFields} onSubmit={handleExport} submitLabel="Export Report" />
+            </Card>
+          </div>
+        </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
-        {competitors.map((comp) => (
-          <Card key={comp.name} title={comp.name}>
-            <div className="space-y-3">
-              <div className="flex justify-between">
-                <span className="text-gray-500">Market Share</span>
-                <span className="font-semibold text-blue-600">{comp.marketShare}</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-gray-500">Rating</span>
-                <span className="font-semibold">{comp.rating}/5.0</span>
-              </div>
-              <div className="pt-2 border-t">
-                <p className="text-sm"><span className="text-green-600 font-medium">Strength:</span> {comp.strength}</p>
-                <p className="text-sm mt-1"><span className="text-red-600 font-medium">Weakness:</span> {comp.weakness}</p>
-              </div>
-            </div>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+          <Card title="Market Trends">
+            <ChartLine data={trendData} title="Market Interest Over Time" />
           </Card>
-        ))}
-      </div>
+          <Card title="Satisfaction Trend">
+            <ChartLine
+              data={[
+                { label: "Q1", value: 72 },
+                { label: "Q2", value: 78 },
+                { label: "Q3", value: 75 },
+                { label: "Q4", value: 82 },
+              ]}
+              title="Customer Satisfaction Score"
+              color="#10b981"
+            />
+          </Card>
+        </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
-        <Card title="Survey Results Overview">
-          <Table columns={surveyTableColumns} data={surveyResults} />
-        </Card>
-        <Card title="Market Trends">
-          <LineChart series={trendData} title="Quarterly Performance" height={220} />
-        </Card>
-      </div>
-
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <Card title="Export Data" className="lg:col-span-1">
-          <Form fields={exportFormFields} onSubmit={handleExport} submitLabel="Export Report" />
-          {exportStatus && (
-            <div className="mt-4 p-3 bg-green-50 text-green-700 rounded-lg text-sm">
-              {exportStatus}
-            </div>
-          )}
-        </Card>
-        <Card title="Key Insights" className="lg:col-span-2">
-          <div className="grid grid-cols-2 gap-4">
-            <div className="p-4 bg-blue-50 rounded-lg">
-              <h4 className="font-semibold text-blue-800">Customer Satisfaction</h4>
-              <p className="text-2xl font-bold text-blue-600 mt-2">78%</p>
-              <p className="text-sm text-gray-600 mt-1">Above industry average</p>
-            </div>
-            <div className="p-4 bg-green-50 rounded-lg">
-              <h4 className="font-semibold text-green-800">Growth Rate</h4>
-              <p className="text-2xl font-bold text-green-600 mt-2">+23%</p>
-              <p className="text-sm text-gray-600 mt-1">Year over year</p>
-            </div>
-            <div className="p-4 bg-purple-50 rounded-lg">
-              <h4 className="font-semibold text-purple-800">Market Position</h4>
-              <p className="text-2xl font-bold text-purple-600 mt-2">#2</p>
-              <p className="text-sm text-gray-600 mt-1">In target segment</p>
-            </div>
-            <div className="p-4 bg-orange-50 rounded-lg">
-              <h4 className="font-semibold text-orange-800">NPS Score</h4>
-              <p className="text-2xl font-bold text-orange-600 mt-2">67</p>
-              <p className="text-sm text-gray-600 mt-1">Promoter category</p>
-            </div>
-          </div>
-        </Card>
-      </div>
+        <h2 className="text-xl font-bold text-gray-800 mb-4">Competitor Analysis</h2>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          {competitors.map((comp) => (
+            <CompetitorCard key={comp.name} competitor={comp} />
+          ))}
+        </div>
+      </main>
     </div>
     </div>
   );
