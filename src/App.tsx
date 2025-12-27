@@ -487,7 +487,7 @@ function App() {
         onSubmit={handleCreateTask}
         teamMembers={teamMembersData}
       />
-    </div>
+    </div>    </div>
   );
 }
 
