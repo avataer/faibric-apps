@@ -6,7 +6,6 @@ interface Contact {
   email: string;
   phone: string;
   company: string;
-  role: string;
   avatar: string;
 }
 
@@ -14,332 +13,333 @@ interface Deal {
   id: string;
   title: string;
   value: number;
-  contactId: string;
   stage: string;
+  contactId: string;
+  probability: number;
 }
 
 interface Activity {
   id: string;
-  type: "call" | "email" | "meeting" | "note";
+  type: string;
   description: string;
-  contactName: string;
+  contactId: string;
   timestamp: string;
+}
+
+interface ModalProps {
+  isOpen: boolean;
+  onClose: () => void;
+  title: string;
+  children: React.ReactNode;
 }
 
 interface CardProps {
   children: React.ReactNode;
   className?: string;
-  onClick?: () => void;
-}
-
-interface ContactCardProps {
-  contact: Contact;
-  onClick?: () => void;
-}
-
-interface PipelineStage {
-  id: string;
-  name: string;
-  color: string;
 }
 
 const sampleContacts: Contact[] = [
-  { id: "1", name: "Sarah Johnson", email: "sarah@techcorp.com", phone: "(555) 123-4567", company: "TechCorp", role: "CTO", avatar: "SJ" },
-  { id: "2", name: "Michael Chen", email: "mchen@innovate.io", phone: "(555) 234-5678", company: "Innovate.io", role: "CEO", avatar: "MC" },
-  { id: "3", name: "Emily Davis", email: "emily@startupx.com", phone: "(555) 345-6789", company: "StartupX", role: "VP Sales", avatar: "ED" },
-  { id: "4", name: "James Wilson", email: "jwilson@enterprise.net", phone: "(555) 456-7890", company: "Enterprise Net", role: "Director", avatar: "JW" },
-];
-
-const pipelineStages: PipelineStage[] = [
-  { id: "lead", name: "Lead", color: "bg-gray-100" },
-  { id: "qualified", name: "Qualified", color: "bg-blue-100" },
-  { id: "proposal", name: "Proposal", color: "bg-yellow-100" },
-  { id: "negotiation", name: "Negotiation", color: "bg-orange-100" },
-  { id: "closed", name: "Closed Won", color: "bg-green-100" },
+  { id: "1", name: "John Smith", email: "john@acme.com", phone: "(555) 123-4567", company: "Acme Corp", avatar: "JS" },
+  { id: "2", name: "Sarah Johnson", email: "sarah@techstart.io", phone: "(555) 234-5678", company: "TechStart", avatar: "SJ" },
+  { id: "3", name: "Mike Wilson", email: "mike@globalinc.com", phone: "(555) 345-6789", company: "Global Inc", avatar: "MW" },
+  { id: "4", name: "Emily Davis", email: "emily@innovate.co", phone: "(555) 456-7890", company: "Innovate Co", avatar: "ED" },
 ];
 
 const sampleDeals: Deal[] = [
-  { id: "d1", title: "Enterprise License", value: 50000, contactId: "1", stage: "proposal" },
-  { id: "d2", title: "Annual Subscription", value: 12000, contactId: "2", stage: "qualified" },
-  { id: "d3", title: "Consulting Package", value: 25000, contactId: "3", stage: "negotiation" },
-  { id: "d4", title: "Platform Integration", value: 75000, contactId: "4", stage: "lead" },
-  { id: "d5", title: "Support Contract", value: 8000, contactId: "1", stage: "closed" },
-  { id: "d6", title: "Custom Development", value: 35000, contactId: "2", stage: "proposal" },
+  { id: "1", title: "Enterprise License", value: 50000, stage: "lead", contactId: "1", probability: 20 },
+  { id: "2", title: "Annual Contract", value: 25000, stage: "qualified", contactId: "2", probability: 40 },
+  { id: "3", title: "Consulting Project", value: 15000, stage: "proposal", contactId: "3", probability: 60 },
+  { id: "4", title: "Software Integration", value: 35000, stage: "negotiation", contactId: "4", probability: 80 },
+  { id: "5", title: "Support Package", value: 10000, stage: "closed", contactId: "1", probability: 100 },
 ];
 
 const sampleActivities: Activity[] = [
-  { id: "a1", type: "call", description: "Discussed pricing options", contactName: "Sarah Johnson", timestamp: "2 hours ago" },
-  { id: "a2", type: "email", description: "Sent proposal document", contactName: "Michael Chen", timestamp: "4 hours ago" },
-  { id: "a3", type: "meeting", description: "Product demo scheduled", contactName: "Emily Davis", timestamp: "Yesterday" },
-  { id: "a4", type: "note", description: "Interested in premium tier", contactName: "James Wilson", timestamp: "Yesterday" },
-  { id: "a5", type: "call", description: "Follow-up on contract terms", contactName: "Sarah Johnson", timestamp: "2 days ago" },
+  { id: "1", type: "call", description: "Discussed product features with John", contactId: "1", timestamp: "2024-01-15 10:30" },
+  { id: "2", type: "email", description: "Sent proposal to Sarah", contactId: "2", timestamp: "2024-01-15 09:15" },
+  { id: "3", type: "meeting", description: "Demo meeting with Mike", contactId: "3", timestamp: "2024-01-14 14:00" },
+  { id: "4", type: "note", description: "Emily requested pricing breakdown", contactId: "4", timestamp: "2024-01-14 11:45" },
 ];
 
-function Card({ children, className = "", onClick }: CardProps) {
+const stages = [
+  { id: "lead", name: "Lead", color: "bg-gray-500" },
+  { id: "qualified", name: "Qualified", color: "bg-blue-500" },
+  { id: "proposal", name: "Proposal", color: "bg-yellow-500" },
+  { id: "negotiation", name: "Negotiation", color: "bg-orange-500" },
+  { id: "closed", name: "Closed Won", color: "bg-green-500" },
+];
+
+function Card({ children, className = "" }: CardProps) {
   return (
-    <div
-      className={`bg-white rounded-lg shadow-sm border border-gray-200 ${onClick ? "cursor-pointer hover:shadow-md transition-shadow" : ""} ${className}`}
-      onClick={onClick}
-    >
+    <div className={"bg-white rounded-lg shadow-md p-4 " + className}>
       {children}
     </div>
   );
 }
 
-function ContactCard({ contact, onClick }: ContactCardProps) {
+function Modal({ isOpen, onClose, title, children }: ModalProps) {
+  if (!isOpen) return null;
   return (
-    <Card className="p-4" onClick={onClick}>
-      <div className="flex items-center gap-3">
-        <div className="w-12 h-12 rounded-full bg-indigo-600 flex items-center justify-center text-white font-semibold">
-          {contact.avatar}
-        </div>
-        <div className="flex-1 min-w-0">
-          <h3 className="font-semibold text-gray-900 truncate">{contact.name}</h3>
-          <p className="text-sm text-gray-500 truncate">{contact.role} at {contact.company}</p>
-        </div>
-      </div>
-      <div className="mt-3 space-y-1">
-        <p className="text-sm text-gray-600 flex items-center gap-2">
-          <span className="text-gray-400">✉</span> {contact.email}
-        </p>
-        <p className="text-sm text-gray-600 flex items-center gap-2">
-          <span className="text-gray-400">☎</span> {contact.phone}
-        </p>
-      </div>
-    </Card>
-  );
-}
-
-function DealCard({ deal, contacts }: { deal: Deal; contacts: Contact[] }) {
-  const contact = contacts.find(c => c.id === deal.contactId);
-  return (
-    <div className="bg-white p-3 rounded-lg shadow-sm border border-gray-200 mb-2 cursor-grab hover:shadow-md transition-shadow">
-      <h4 className="font-medium text-gray-900 text-sm">{deal.title}</h4>
-      <p className="text-xs text-gray-500 mt-1">{contact?.name}</p>
-      <p className="text-sm font-semibold text-green-600 mt-2">${deal.value.toLocaleString()}</p>
-    </div>
-  );
-}
-
-function ActivityItem({ activity }: { activity: Activity }) {
-  const icons: Record<string, string> = {
-    call: "📞",
-    email: "✉️",
-    meeting: "📅",
-    note: "📝",
-  };
-  const colors: Record<string, string> = {
-    call: "bg-blue-100 text-blue-600",
-    email: "bg-green-100 text-green-600",
-    meeting: "bg-purple-100 text-purple-600",
-    note: "bg-yellow-100 text-yellow-600",
-  };
-
-  return (
-    <div className="flex items-start gap-3 py-3 border-b border-gray-100 last:border-0">
-      <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm ${colors[activity.type]}`}>
-        {icons[activity.type]}
-      </div>
-      <div className="flex-1 min-w-0">
-        <p className="text-sm text-gray-900">{activity.description}</p>
-        <p className="text-xs text-gray-500 mt-1">
-          {activity.contactName} • {activity.timestamp}
-        </p>
-      </div>
-    </div>
-  );
-}
-
-function Sidebar({ activeTab, setActiveTab }: { activeTab: string; setActiveTab: (tab: string) => void }) {
-  const tabs = [
-    { id: "dashboard", label: "Dashboard", icon: "📊" },
-    { id: "contacts", label: "Contacts", icon: "👥" },
-    { id: "pipeline", label: "Pipeline", icon: "📈" },
-    { id: "activities", label: "Activities", icon: "📋" },
-  ];
-
-  return (
-    <aside className="w-64 bg-gray-900 text-white flex flex-col">
-      <div className="p-6 border-b border-gray-800">
-        <h1 className="text-xl font-bold flex items-center gap-2">
-          <span className="text-2xl">💼</span> SalesCRM
-        </h1>
-      </div>
-      <nav className="flex-1 p-4">
-        {tabs.map(tab => (
-          <button
-            key={tab.id}
-            onClick={() => setActiveTab(tab.id)}
-            className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg mb-1 transition-colors ${
-              activeTab === tab.id ? "bg-indigo-600 text-white" : "text-gray-300 hover:bg-gray-800"
-            }`}
-          >
-            <span>{tab.icon}</span>
-            <span>{tab.label}</span>
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+      <div className="bg-white rounded-lg shadow-xl w-full max-w-md mx-4">
+        <div className="flex justify-between items-center p-4 border-b">
+          <h2 className="text-xl font-semibold">{title}</h2>
+          <button onClick={onClose} className="text-gray-500 hover:text-gray-700 text-2xl">
+            &times;
           </button>
-        ))}
-      </nav>
-      <div className="p-4 border-t border-gray-800">
-        <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-full bg-indigo-500 flex items-center justify-center font-semibold">
-            JD
-          </div>
-          <div>
-            <p className="text-sm font-medium">John Doe</p>
-            <p className="text-xs text-gray-400">Sales Manager</p>
-          </div>
         </div>
+        <div className="p-4">{children}</div>
       </div>
-    </aside>
-  );
-}
-
-function DashboardView({ contacts, deals, activities }: { contacts: Contact[]; deals: Deal[]; activities: Activity[] }) {
-  const totalValue = deals.reduce((sum, d) => sum + d.value, 0);
-  const closedValue = deals.filter(d => d.stage === "closed").reduce((sum, d) => sum + d.value, 0);
-
-  return (
-    <div className="space-y-6">
-      <div className="grid grid-cols-4 gap-4">
-        <Card className="p-5">
-          <p className="text-sm text-gray-500">Total Contacts</p>
-          <p className="text-3xl font-bold text-gray-900 mt-1">{contacts.length}</p>
-        </Card>
-        <Card className="p-5">
-          <p className="text-sm text-gray-500">Active Deals</p>
-          <p className="text-3xl font-bold text-gray-900 mt-1">{deals.length}</p>
-        </Card>
-        <Card className="p-5">
-          <p className="text-sm text-gray-500">Pipeline Value</p>
-          <p className="text-3xl font-bold text-indigo-600 mt-1">${totalValue.toLocaleString()}</p>
-        </Card>
-        <Card className="p-5">
-          <p className="text-sm text-gray-500">Closed Revenue</p>
-          <p className="text-3xl font-bold text-green-600 mt-1">${closedValue.toLocaleString()}</p>
-        </Card>
-      </div>
-      <div className="grid grid-cols-3 gap-6">
-        <div className="col-span-2">
-          <Card className="p-5">
-            <h2 className="text-lg font-semibold text-gray-900 mb-4">Recent Contacts</h2>
-            <div className="grid grid-cols-2 gap-4">
-              {contacts.slice(0, 4).map(contact => (
-                <ContactCard key={contact.id} contact={contact} />
-              ))}
-            </div>
-          </Card>
-        </div>
-        <Card className="p-5">
-          <h2 className="text-lg font-semibold text-gray-900 mb-4">Recent Activity</h2>
-          <div>
-            {activities.slice(0, 4).map(activity => (
-              <ActivityItem key={activity.id} activity={activity} />
-            ))}
-          </div>
-        </Card>
-      </div>
-    </div>
-  );
-}
-
-function ContactsView({ contacts }: { contacts: Contact[] }) {
-  const [search, setSearch] = useState("");
-  const filtered = contacts.filter(c =>
-    c.name.toLowerCase().includes(search.toLowerCase()) ||
-    c.company.toLowerCase().includes(search.toLowerCase())
-  );
-
-  return (
-    <div className="space-y-4">
-      <div className="flex items-center justify-between">
-        <h2 className="text-2xl font-bold text-gray-900">Contacts</h2>
-        <button className="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors">
-          + Add Contact
-        </button>
-      </div>
-      <input
-        type="text"
-        placeholder="Search contacts..."
-        value={search}
-        onChange={e => setSearch(e.target.value)}
-        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
-      />
-      <div className="grid grid-cols-3 gap-4">
-        {filtered.map(contact => (
-          <ContactCard key={contact.id} contact={contact} />
-        ))}
-      </div>
-    </div>
-  );
-}
-
-function PipelineView({ deals, contacts }: { deals: Deal[]; contacts: Contact[] }) {
-  return (
-    <div className="space-y-4">
-      <div className="flex items-center justify-between">
-        <h2 className="text-2xl font-bold text-gray-900">Sales Pipeline</h2>
-        <button className="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors">
-          + Add Deal
-        </button>
-      </div>
-      <div className="flex gap-4 overflow-x-auto pb-4">
-        {pipelineStages.map(stage => {
-          const stageDeals = deals.filter(d => d.stage === stage.id);
-          const stageTotal = stageDeals.reduce((sum, d) => sum + d.value, 0);
-          return (
-            <div key={stage.id} className={`flex-shrink-0 w-72 ${stage.color} rounded-lg p-4`}>
-              <div className="flex items-center justify-between mb-3">
-                <h3 className="font-semibold text-gray-800">{stage.name}</h3>
-                <span className="text-xs bg-white px-2 py-1 rounded-full text-gray-600">
-                  {stageDeals.length}
-                </span>
-              </div>
-              <p className="text-xs text-gray-600 mb-3">${stageTotal.toLocaleString()}</p>
-              <div className="space-y-2">
-                {stageDeals.map(deal => (
-                  <DealCard key={deal.id} deal={deal} contacts={contacts} />
-                ))}
-              </div>
-            </div>
-          );
-        })}
-      </div>
-    </div>
-  );
-}
-
-function ActivitiesView({ activities }: { activities: Activity[] }) {
-  return (
-    <div className="space-y-4">
-      <div className="flex items-center justify-between">
-        <h2 className="text-2xl font-bold text-gray-900">Activity Feed</h2>
-        <button className="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors">
-          + Log Activity
-        </button>
-      </div>
-      <Card className="p-5">
-        {activities.map(activity => (
-          <ActivityItem key={activity.id} activity={activity} />
-        ))}
-      </Card>
     </div>
   );
 }
 
 function App() {
-  const [activeTab, setActiveTab] = useState("dashboard");
+  const [activeTab, setActiveTab] = useState("pipeline");
+  const [contacts, setContacts] = useState(sampleContacts);
+  const [deals, setDeals] = useState(sampleDeals);
+  const [activities] = useState(sampleActivities);
+  const [isContactModalOpen, setIsContactModalOpen] = useState(false);
+  const [isDealModalOpen, setIsDealModalOpen] = useState(false);
+  const [newContact, setNewContact] = useState({ name: "", email: "", phone: "", company: "" });
+  const [newDeal, setNewDeal] = useState({ title: "", value: "", contactId: "", stage: "lead" });
+
+  const getContactById = (id: string) => contacts.find(c => c.id === id);
+
+  const handleAddContact = () => {
+    const contact: Contact = {
+      id: String(contacts.length + 1),
+      name: newContact.name,
+      email: newContact.email,
+      phone: newContact.phone,
+      company: newContact.company,
+      avatar: newContact.name.split(" ").map(n => n[0]).join("").toUpperCase(),
+    };
+    setContacts([...contacts, contact]);
+    setNewContact({ name: "", email: "", phone: "", company: "" });
+    setIsContactModalOpen(false);
+  };
+
+  const handleAddDeal = () => {
+    const deal: Deal = {
+      id: String(deals.length + 1),
+      title: newDeal.title,
+      value: Number(newDeal.value),
+      contactId: newDeal.contactId,
+      stage: newDeal.stage,
+      probability: 20,
+    };
+    setDeals([...deals, deal]);
+    setNewDeal({ title: "", value: "", contactId: "", stage: "lead" });
+    setIsDealModalOpen(false);
+  };
+
+  const handleDragStart = (e: React.DragEvent, dealId: string) => {
+    e.dataTransfer.setData("dealId", dealId);
+  };
+
+  const handleDragOver = (e: React.DragEvent) => {
+    e.preventDefault();
+  };
+
+  const handleDrop = (e: React.DragEvent, stageId: string) => {
+    e.preventDefault();
+    const dealId = e.dataTransfer.getData("dealId");
+    setDeals(deals.map(d => d.id === dealId ? { ...d, stage: stageId } : d));
+  };
+
+  const getActivityIcon = (type: string) => {
+    switch (type) {
+      case "call": return "📞";
+      case "email": return "📧";
+      case "meeting": return "📅";
+      default: return "📝";
+    }
+  };
 
   return (
-    <div className="flex h-screen bg-gray-50">
-      <Sidebar activeTab={activeTab} setActiveTab={setActiveTab} />
-      <main className="flex-1 overflow-auto p-8">
-        {activeTab === "dashboard" && (
-          <DashboardView contacts={sampleContacts} deals={sampleDeals} activities={sampleActivities} />
+    <div className="min-h-screen bg-gray-100">
+      <header className="bg-indigo-600 text-white shadow-lg">
+        <div className="max-w-7xl mx-auto px-4 py-4">
+          <div className="flex justify-between items-center">
+            <h1 className="text-2xl font-bold">CRM Dashboard</h1>
+            <nav className="flex gap-4">
+              <button onClick={() => setActiveTab("pipeline")} className={"px-4 py-2 rounded-md " + (activeTab === "pipeline" ? "bg-indigo-700" : "hover:bg-indigo-500")}>
+                Pipeline
+              </button>
+              <button onClick={() => setActiveTab("contacts")} className={"px-4 py-2 rounded-md " + (activeTab === "contacts" ? "bg-indigo-700" : "hover:bg-indigo-500")}>
+                Contacts
+              </button>
+              <button onClick={() => setActiveTab("activity")} className={"px-4 py-2 rounded-md " + (activeTab === "activity" ? "bg-indigo-700" : "hover:bg-indigo-500")}>
+                Activity
+              </button>
+            </nav>
+          </div>
+        </div>
+      </header>
+
+      <main className="max-w-7xl mx-auto px-4 py-6">
+        {activeTab === "pipeline" && (
+          <div>
+            <div className="flex justify-between items-center mb-6">
+              <h2 className="text-2xl font-bold text-gray-800">Deal Pipeline</h2>
+              <button onClick={() => setIsDealModalOpen(true)} className="bg-indigo-600 text-white px-4 py-2 rounded-md hover:bg-indigo-700">
+                + Add Deal
+              </button>
+            </div>
+            <div className="flex gap-4 overflow-x-auto pb-4">
+              {stages.map(stage => (
+                <div key={stage.id} className="flex-shrink-0 w-72" onDragOver={handleDragOver} onDrop={(e) => handleDrop(e, stage.id)}>
+                  <div className={"rounded-t-lg p-3 text-white font-semibold " + stage.color}>
+                    {stage.name} ({deals.filter(d => d.stage === stage.id).length})
+                  </div>
+                  <div className="bg-gray-200 rounded-b-lg p-2 min-h-96 space-y-2">
+                    {deals.filter(d => d.stage === stage.id).map(deal => {
+                      const contact = getContactById(deal.contactId);
+                      return (
+                        <div key={deal.id} draggable onDragStart={(e) => handleDragStart(e, deal.id)} className="bg-white rounded-lg p-3 shadow cursor-move hover:shadow-md">
+                          <h4 className="font-semibold text-gray-800">{deal.title}</h4>
+                          <p className="text-green-600 font-bold">${deal.value.toLocaleString()}</p>
+                          {contact && (
+                            <div className="flex items-center gap-2 mt-2 text-sm text-gray-600">
+                              <span className="w-6 h-6 rounded-full bg-indigo-100 text-indigo-600 flex items-center justify-center text-xs">
+                                {contact.avatar}
+                              </span>
+                              {contact.name}
+                            </div>
+                          )}
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
         )}
-        {activeTab === "contacts" && <ContactsView contacts={sampleContacts} />}
-        {activeTab === "pipeline" && <PipelineView deals={sampleDeals} contacts={sampleContacts} />}
-        {activeTab === "activities" && <ActivitiesView activities={sampleActivities} />}
+
+        {activeTab === "contacts" && (
+          <div>
+            <div className="flex justify-between items-center mb-6">
+              <h2 className="text-2xl font-bold text-gray-800">Contacts</h2>
+              <button onClick={() => setIsContactModalOpen(true)} className="bg-indigo-600 text-white px-4 py-2 rounded-md hover:bg-indigo-700">
+                + Add Contact
+              </button>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {contacts.map(contact => (
+                <Card key={contact.id}>
+                  <div className="flex items-start gap-4">
+                    <div className="w-12 h-12 rounded-full bg-indigo-500 text-white flex items-center justify-center text-lg font-bold">
+                      {contact.avatar}
+                    </div>
+                    <div className="flex-1">
+                      <h3 className="font-semibold text-lg text-gray-800">{contact.name}</h3>
+                      <p className="text-gray-600">{contact.company}</p>
+                      <p className="text-sm text-gray-500 mt-2">📧 {contact.email}</p>
+                      <p className="text-sm text-gray-500">📞 {contact.phone}</p>
+                      <div className="mt-3 pt-3 border-t">
+                        <p className="text-sm text-gray-600">
+                          {deals.filter(d => d.contactId === contact.id).length} deals
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                </Card>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {activeTab === "activity" && (
+          <div>
+            <h2 className="text-2xl font-bold text-gray-800 mb-6">Activity Feed</h2>
+            <div className="space-y-4">
+              {activities.map(activity => {
+                const contact = getContactById(activity.contactId);
+                return (
+                  <Card key={activity.id}>
+                    <div className="flex items-start gap-4">
+                      <span className="text-2xl">{getActivityIcon(activity.type)}</span>
+                      <div className="flex-1">
+                        <p className="text-gray-800">{activity.description}</p>
+                        <div className="flex items-center gap-2 mt-2 text-sm text-gray-500">
+                          {contact && (
+                            <span className="flex items-center gap-1">
+                              <span className="w-5 h-5 rounded-full bg-indigo-100 text-indigo-600 flex items-center justify-center text-xs">
+                                {contact.avatar}
+                              </span>
+                              {contact.name}
+                            </span>
+                          )}
+                          <span>•</span>
+                          <span>{activity.timestamp}</span>
+                        </div>
+                      </div>
+                    </div>
+                  </Card>
+                );
+              })}
+            </div>
+          </div>
+        )}
       </main>
+
+      <Modal isOpen={isContactModalOpen} onClose={() => setIsContactModalOpen(false)} title="Add New Contact">
+        <div className="space-y-4">
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Name</label>
+            <input type="text" value={newContact.name} onChange={(e) => setNewContact({ ...newContact, name: e.target.value })} className="w-full border rounded-md px-3 py-2" placeholder="John Doe" />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Email</label>
+            <input type="email" value={newContact.email} onChange={(e) => setNewContact({ ...newContact, email: e.target.value })} className="w-full border rounded-md px-3 py-2" placeholder="john@example.com" />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Phone</label>
+            <input type="text" value={newContact.phone} onChange={(e) => setNewContact({ ...newContact, phone: e.target.value })} className="w-full border rounded-md px-3 py-2" placeholder="(555) 123-4567" />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Company</label>
+            <input type="text" value={newContact.company} onChange={(e) => setNewContact({ ...newContact, company: e.target.value })} className="w-full border rounded-md px-3 py-2" placeholder="Acme Corp" />
+          </div>
+          <button onClick={handleAddContact} className="w-full bg-indigo-600 text-white py-2 rounded-md hover:bg-indigo-700">
+            Add Contact
+          </button>
+        </div>
+      </Modal>
+
+      <Modal isOpen={isDealModalOpen} onClose={() => setIsDealModalOpen(false)} title="Add New Deal">
+        <div className="space-y-4">
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Deal Title</label>
+            <input type="text" value={newDeal.title} onChange={(e) => setNewDeal({ ...newDeal, title: e.target.value })} className="w-full border rounded-md px-3 py-2" placeholder="Enterprise License" />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Value ($)</label>
+            <input type="number" value={newDeal.value} onChange={(e) => setNewDeal({ ...newDeal, value: e.target.value })} className="w-full border rounded-md px-3 py-2" placeholder="10000" />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Contact</label>
+            <select value={newDeal.contactId} onChange={(e) => setNewDeal({ ...newDeal, contactId: e.target.value })} className="w-full border rounded-md px-3 py-2">
+              <option value="">Select contact</option>
+              {contacts.map(c => (
+                <option key={c.id} value={c.id}>{c.name}</option>
+              ))}
+            </select>
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Stage</label>
+            <select value={newDeal.stage} onChange={(e) => setNewDeal({ ...newDeal, stage: e.target.value })} className="w-full border rounded-md px-3 py-2">
+              {stages.map(s => (
+                <option key={s.id} value={s.id}>{s.name}</option>
+              ))}
+            </select>
+          </div>
+          <button onClick={handleAddDeal} className="w-full bg-indigo-600 text-white py-2 rounded-md hover:bg-indigo-700">
+            Add Deal
+          </button>
+        </div>
+      </Modal>
     </div>
   );
 }
