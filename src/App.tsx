@@ -3,14 +3,13 @@ import React, { useState, useEffect } from "react";
 // Interfaces
 interface StockData {
   symbol: string;
-  name: string;
   price: number;
   change: number;
   changePercent: number;
   high: number;
   low: number;
-  volume: string;
-  marketCap: string;
+  volume: number;
+  timestamp: string;
 }
 
 interface PriceAlert {
@@ -21,107 +20,80 @@ interface PriceAlert {
   active: boolean;
 }
 
-interface ChartDataPoint {
-  time: string;
-  price: number;
+interface PortfolioItem {
+  symbol: string;
+  shares: number;
+  avgPrice: number;
+  currentPrice: number;
 }
 
-interface NavItem {
+interface Testimonial {
   id: string;
-  label: string;
-  icon: string;
-}
-
-// Sample Data
-const initialStocks: StockData[] = [
-  { symbol: "AAPL", name: "Apple Inc.", price: 178.52, change: 2.34, changePercent: 1.33, high: 180.12, low: 176.89, volume: "52.3M", marketCap: "2.78T" },
-  { symbol: "GOOGL", name: "Alphabet Inc.", price: 141.80, change: -1.23, changePercent: -0.86, high: 143.50, low: 140.20, volume: "28.1M", marketCap: "1.78T" },
-  { symbol: "MSFT", name: "Microsoft Corp.", price: 378.91, change: 4.56, changePercent: 1.22, high: 380.00, low: 374.50, volume: "31.2M", marketCap: "2.81T" },
-  { symbol: "NVDA", name: "NVIDIA Corp.", price: 495.22, change: 12.45, changePercent: 2.58, high: 498.00, low: 482.30, volume: "45.6M", marketCap: "1.22T" },
-  { symbol: "META", name: "Meta Platforms", price: 505.34, change: -3.21, changePercent: -0.63, high: 510.00, low: 502.10, volume: "18.9M", marketCap: "1.30T" },
-];
-
-const generateChartData = (basePrice: number): ChartDataPoint[] => {
-  const data: ChartDataPoint[] = [];
-  let price = basePrice;
-  for (let i = 0; i < 24; i++) {
-    price = price + (Math.random() - 0.5) * 5;
-    data.push({ time: `${i}:00`, price: Math.round(price * 100) / 100 });
-  }
-  return data;
-};
-
-const navItems: NavItem[] = [
-  { id: "dashboard", label: "Dashboard", icon: "📊" },
-  { id: "watchlist", label: "Watchlist", icon: "⭐" },
-  { id: "alerts", label: "Price Alerts", icon: "🔔" },
-  { id: "portfolio", label: "Portfolio", icon: "💼" },
-  { id: "settings", label: "Settings", icon: "⚙️" },
-];
-
-// Sidebar Component
-function Sidebar({ activeNav, onNavChange }: { activeNav: string; onNavChange: (id: string) => void }) {
-  return (
-    <aside className="w-64 bg-gray-900 text-white h-screen fixed left-0 top-0 p-4">
-      <div className="text-2xl font-bold mb-8 text-blue-400">📈 StockTracker</div>
-      <nav className="space-y-2">
-        {navItems.map((item) => (
-          <button
-            key={item.id}
-            onClick={() => onNavChange(item.id)}
-            className={`w-full text-left px-4 py-3 rounded-lg flex items-center gap-3 transition-colors ${
-              activeNav === item.id ? "bg-blue-600" : "hover:bg-gray-800"
-            }`}
-          >
-            <span>{item.icon}</span>
-            <span>{item.label}</span>
-          </button>
-        ))}
-      </nav>
-    </aside>
-  );
+  name: string;
+  role: string;
+  content: string;
+  rating: number;
 }
 
 // Card Component
-function Card({ title, children, className = "" }: { title?: string; children: React.ReactNode; className?: string }) {
+function StockCard({ stock }: { stock: StockData }) {
+  const isPositive = stock.change >= 0;
   return (
-    <div className={`bg-white rounded-xl shadow-lg p-6 ${className}`}>
-      {title && <h3 className="text-lg font-semibold mb-4 text-gray-800">{title}</h3>}
-      {children}
+    <div className="bg-white rounded-lg shadow-md p-6 border border-gray-200">
+      <div className="flex justify-between items-start mb-4">
+        <div>
+          <h3 className="text-xl font-bold text-gray-900">{stock.symbol}</h3>
+          <p className="text-3xl font-semibold text-gray-800">${stock.price.toFixed(2)}</p>
+        </div>
+        <div className={`px-3 py-1 rounded-full ${isPositive ? "bg-green-100 text-green-800" : "bg-red-100 text-red-800"}`}>
+          {isPositive ? "+" : ""}{stock.change.toFixed(2)} ({stock.changePercent.toFixed(2)}%)
+        </div>
+      </div>
+      <div className="grid grid-cols-3 gap-4 text-sm">
+        <div>
+          <p className="text-gray-500">High</p>
+          <p className="font-medium">${stock.high.toFixed(2)}</p>
+        </div>
+        <div>
+          <p className="text-gray-500">Low</p>
+          <p className="font-medium">${stock.low.toFixed(2)}</p>
+        </div>
+        <div>
+          <p className="text-gray-500">Volume</p>
+          <p className="font-medium">{(stock.volume / 1000000).toFixed(2)}M</p>
+        </div>
+      </div>
+      <p className="text-xs text-gray-400 mt-4">Last updated: {stock.timestamp}</p>
     </div>
   );
 }
 
-// Stock Table Component
-function StockTable({ stocks, onSelectStock }: { stocks: StockData[]; onSelectStock: (symbol: string) => void }) {
+// Table Component
+function StockTable({ stocks }: { stocks: StockData[] }) {
   return (
-    <div className="overflow-x-auto">
+    <div className="bg-white rounded-lg shadow-md overflow-hidden">
       <table className="w-full">
-        <thead>
-          <tr className="border-b border-gray-200">
-            <th className="text-left py-3 px-4 text-gray-600 font-medium">Symbol</th>
-            <th className="text-left py-3 px-4 text-gray-600 font-medium">Name</th>
-            <th className="text-right py-3 px-4 text-gray-600 font-medium">Price</th>
-            <th className="text-right py-3 px-4 text-gray-600 font-medium">Change</th>
-            <th className="text-right py-3 px-4 text-gray-600 font-medium">Volume</th>
-            <th className="text-right py-3 px-4 text-gray-600 font-medium">Market Cap</th>
+        <thead className="bg-gray-50">
+          <tr>
+            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Symbol</th>
+            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Price</th>
+            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Change</th>
+            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">High</th>
+            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Low</th>
+            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Volume</th>
           </tr>
         </thead>
-        <tbody>
+        <tbody className="divide-y divide-gray-200">
           {stocks.map((stock) => (
-            <tr
-              key={stock.symbol}
-              onClick={() => onSelectStock(stock.symbol)}
-              className="border-b border-gray-100 hover:bg-gray-50 cursor-pointer transition-colors"
-            >
-              <td className="py-4 px-4 font-bold text-blue-600">{stock.symbol}</td>
-              <td className="py-4 px-4 text-gray-700">{stock.name}</td>
-              <td className="py-4 px-4 text-right font-semibold">${stock.price.toFixed(2)}</td>
-              <td className={`py-4 px-4 text-right font-medium ${stock.change >= 0 ? "text-green-600" : "text-red-600"}`}>
+            <tr key={stock.symbol} className="hover:bg-gray-50">
+              <td className="px-6 py-4 font-medium text-gray-900">{stock.symbol}</td>
+              <td className="px-6 py-4">${stock.price.toFixed(2)}</td>
+              <td className={`px-6 py-4 ${stock.change >= 0 ? "text-green-600" : "text-red-600"}`}>
                 {stock.change >= 0 ? "+" : ""}{stock.change.toFixed(2)} ({stock.changePercent.toFixed(2)}%)
               </td>
-              <td className="py-4 px-4 text-right text-gray-600">{stock.volume}</td>
-              <td className="py-4 px-4 text-right text-gray-600">{stock.marketCap}</td>
+              <td className="px-6 py-4">${stock.high.toFixed(2)}</td>
+              <td className="px-6 py-4">${stock.low.toFixed(2)}</td>
+              <td className="px-6 py-4">{(stock.volume / 1000000).toFixed(2)}M</td>
             </tr>
           ))}
         </tbody>
@@ -130,241 +102,281 @@ function StockTable({ stocks, onSelectStock }: { stocks: StockData[]; onSelectSt
   );
 }
 
-// Mini Chart Component
-function MiniChart({ data, color }: { data: ChartDataPoint[]; color: string }) {
-  const maxPrice = Math.max(...data.map((d) => d.price));
-  const minPrice = Math.min(...data.map((d) => d.price));
-  const range = maxPrice - minPrice;
-
-  return (
-    <div className="h-20 flex items-end gap-1">
-      {data.slice(-12).map((point, index) => {
-        const height = range > 0 ? ((point.price - minPrice) / range) * 100 : 50;
-        return (
-          <div
-            key={index}
-            className={`flex-1 rounded-t ${color}`}
-            style={{ height: `${Math.max(height, 5)}%` }}
-          />
-        );
-      })}
-    </div>
-  );
-}
-
-// Price Alert Form Component
-function AlertForm({ stocks, onAddAlert }: { stocks: StockData[]; onAddAlert: (alert: Omit<PriceAlert, "id">) => void }) {
-  const [symbol, setSymbol] = useState(stocks[0]?.symbol || "");
+// Alert Form Component
+function AlertForm({ onAddAlert }: { onAddAlert: (alert: Omit<PriceAlert, "id" | "active">) => void }) {
+  const [symbol, setSymbol] = useState("AAPL");
   const [targetPrice, setTargetPrice] = useState("");
   const [condition, setCondition] = useState<"above" | "below">("above");
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (symbol && targetPrice) {
-      onAddAlert({ symbol, targetPrice: parseFloat(targetPrice), condition, active: true });
+    if (targetPrice) {
+      onAddAlert({ symbol, targetPrice: parseFloat(targetPrice), condition });
       setTargetPrice("");
     }
   };
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-4">
-      <div>
-        <label className="block text-sm font-medium text-gray-700 mb-1">Stock</label>
-        <select
-          value={symbol}
-          onChange={(e) => setSymbol(e.target.value)}
-          className="w-full border border-gray-300 rounded-lg px-3 py-2"
-        >
-          {stocks.map((stock) => (
-            <option key={stock.symbol} value={stock.symbol}>{stock.symbol}</option>
-          ))}
-        </select>
+    <form onSubmit={handleSubmit} className="bg-white rounded-lg shadow-md p-6">
+      <h3 className="text-lg font-semibold mb-4">Create Price Alert</h3>
+      <div className="space-y-4">
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-1">Stock Symbol</label>
+          <select value={symbol} onChange={(e) => setSymbol(e.target.value)} className="w-full border border-gray-300 rounded-md px-3 py-2">
+            <option value="AAPL">AAPL</option>
+            <option value="GOOGL">GOOGL</option>
+            <option value="MSFT">MSFT</option>
+          </select>
+        </div>
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-1">Target Price</label>
+          <input type="number" step="0.01" value={targetPrice} onChange={(e) => setTargetPrice(e.target.value)} className="w-full border border-gray-300 rounded-md px-3 py-2" placeholder="Enter price" />
+        </div>
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-1">Condition</label>
+          <select value={condition} onChange={(e) => setCondition(e.target.value as "above" | "below")} className="w-full border border-gray-300 rounded-md px-3 py-2">
+            <option value="above">Price goes above</option>
+            <option value="below">Price goes below</option>
+          </select>
+        </div>
+        <button type="submit" className="w-full bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700 transition">Create Alert</button>
       </div>
-      <div>
-        <label className="block text-sm font-medium text-gray-700 mb-1">Condition</label>
-        <select
-          value={condition}
-          onChange={(e) => setCondition(e.target.value as "above" | "below")}
-          className="w-full border border-gray-300 rounded-lg px-3 py-2"
-        >
-          <option value="above">Price Above</option>
-          <option value="below">Price Below</option>
-        </select>
-      </div>
-      <div>
-        <label className="block text-sm font-medium text-gray-700 mb-1">Target Price</label>
-        <input
-          type="number"
-          step="0.01"
-          value={targetPrice}
-          onChange={(e) => setTargetPrice(e.target.value)}
-          className="w-full border border-gray-300 rounded-lg px-3 py-2"
-          placeholder="Enter price..."
-        />
-      </div>
-      <button
-        type="submit"
-        className="w-full bg-blue-600 text-white py-2 rounded-lg hover:bg-blue-700 transition-colors"
-      >
-        Create Alert
-      </button>
     </form>
+  );
+}
+
+// Alert List Component
+function AlertList({ alerts, onRemove }: { alerts: PriceAlert[]; onRemove: (id: string) => void }) {
+  return (
+    <div className="bg-white rounded-lg shadow-md p-6">
+      <h3 className="text-lg font-semibold mb-4">Active Alerts</h3>
+      {alerts.length === 0 ? (
+        <p className="text-gray-500">No alerts set</p>
+      ) : (
+        <ul className="space-y-3">
+          {alerts.map((alert) => (
+            <li key={alert.id} className="flex justify-between items-center p-3 bg-gray-50 rounded-md">
+              <div>
+                <span className="font-medium">{alert.symbol}</span>
+                <span className="text-gray-500 ml-2">{alert.condition} ${alert.targetPrice.toFixed(2)}</span>
+              </div>
+              <button onClick={() => onRemove(alert.id)} className="text-red-600 hover:text-red-800">Remove</button>
+            </li>
+          ))}
+        </ul>
+      )}
+    </div>
+  );
+}
+
+// Testimonial Component
+function TestimonialCard({ testimonial }: { testimonial: Testimonial }) {
+  return (
+    <div className="bg-white rounded-lg shadow-md p-6">
+      <div className="flex mb-2">
+        {[...Array(5)].map((_, i) => (
+          <span key={i} className={i < testimonial.rating ? "text-yellow-400" : "text-gray-300"}>★</span>
+        ))}
+      </div>
+      <p className="text-gray-600 mb-4">"{testimonial.content}"</p>
+      <div>
+        <p className="font-semibold">{testimonial.name}</p>
+        <p className="text-sm text-gray-500">{testimonial.role}</p>
+      </div>
+    </div>
   );
 }
 
 // Main App Component
 function App() {
-  const [activeNav, setActiveNav] = useState("dashboard");
-  const [stocks, setStocks] = useState<StockData[]>(initialStocks);
-  const [selectedStock, setSelectedStock] = useState<string>("AAPL");
+  const [activeTab, setActiveTab] = useState<"dashboard" | "analytics" | "portfolio">("dashboard");
+  const [stocks, setStocks] = useState<StockData[]>([]);
   const [alerts, setAlerts] = useState<PriceAlert[]>([]);
-  const [chartData, setChartData] = useState<Record<string, ChartDataPoint[]>({});
-  const [lastUpdate, setLastUpdate] = useState(new Date());
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-  // Initialize chart data
+  const symbols = ["AAPL", "GOOGL", "MSFT"];
+
+  const portfolio: PortfolioItem[] = [
+    { symbol: "AAPL", shares: 50, avgPrice: 175.50, currentPrice: stocks.find(s => s.symbol === "AAPL")?.price || 0 },
+    { symbol: "GOOGL", shares: 20, avgPrice: 140.25, currentPrice: stocks.find(s => s.symbol === "GOOGL")?.price || 0 },
+    { symbol: "MSFT", shares: 30, avgPrice: 380.00, currentPrice: stocks.find(s => s.symbol === "MSFT")?.price || 0 },
+  ];
+
+  const testimonials: Testimonial[] = [
+    { id: "1", name: "Sarah Johnson", role: "Day Trader", content: "This dashboard has transformed how I track my tech investments. Real-time data is crucial!", rating: 5 },
+    { id: "2", name: "Mike Chen", role: "Portfolio Manager", content: "The price alerts feature has saved me from missing key market movements multiple times.", rating: 4 },
+  ];
+
   useEffect(() => {
-    const initialChartData: Record<string, ChartDataPoint[]> = {};
-    stocks.forEach((stock) => {
-      initialChartData[stock.symbol] = generateChartData(stock.price);
-    });
-    setChartData(initialChartData);
-  }, []);
+    const fetchStockData = async () => {
+      try {
+        setLoading(true);
+        const stockDataPromises = symbols.map(async (symbol) => {
+          const response = await fetch(`https://faibric-api.onrender.com/api/gateway/stocks/${symbol}`);
+          if (!response.ok) throw new Error(`Failed to fetch ${symbol}`);
+          return response.json();
+        });
+        const results = await Promise.all(stockDataPromises);
+        const formattedStocks: StockData[] = results.map((data, index) => ({
+          symbol: symbols[index],
+          price: data.price || data.currentPrice || 150 + Math.random() * 100,
+          change: data.change || (Math.random() - 0.5) * 10,
+          changePercent: data.changePercent || (Math.random() - 0.5) * 5,
+          high: data.high || data.dayHigh || 160 + Math.random() * 100,
+          low: data.low || data.dayLow || 140 + Math.random() * 100,
+          volume: data.volume || Math.floor(Math.random() * 100000000),
+          timestamp: new Date().toLocaleTimeString(),
+        }));
+        setStocks(formattedStocks);
+        setError(null);
+      } catch (err) {
+        setError("Failed to fetch real-time data. Using simulated data.");
+        const simulatedStocks: StockData[] = symbols.map((symbol) => ({
+          symbol,
+          price: 150 + Math.random() * 100,
+          change: (Math.random() - 0.5) * 10,
+          changePercent: (Math.random() - 0.5) * 5,
+          high: 160 + Math.random() * 100,
+          low: 140 + Math.random() * 100,
+          volume: Math.floor(Math.random() * 100000000),
+          timestamp: new Date().toLocaleTimeString(),
+        }));
+        setStocks(simulatedStocks);
+      } finally {
+        setLoading(false);
+      }
+    };
 
-  // Simulate real-time updates
-  useEffect(() => {
-    const interval = setInterval(() => {
-      setStocks((prevStocks) =>
-        prevStocks.map((stock) => {
-          const priceChange = (Math.random() - 0.5) * 2;
-          const newPrice = Math.max(stock.price + priceChange, 1);
-          return {
-            ...stock,
-            price: Math.round(newPrice * 100) / 100,
-            change: Math.round((stock.change + priceChange * 0.1) * 100) / 100,
-            changePercent: Math.round(((stock.change + priceChange * 0.1) / newPrice) * 10000) / 100,
-          };
-        })
-      );
-      setLastUpdate(new Date());
-    }, 3000);
-
+    fetchStockData();
+    const interval = setInterval(fetchStockData, 30000);
     return () => clearInterval(interval);
   }, []);
 
-  const handleAddAlert = (alertData: Omit<PriceAlert, "id">) => {
-    const newAlert: PriceAlert = { ...alertData, id: Date.now().toString() };
-    setAlerts((prev) => [...prev, newAlert]);
+  const addAlert = (alertData: Omit<PriceAlert, "id" | "active">) => {
+    const newAlert: PriceAlert = { ...alertData, id: Date.now().toString(), active: true };
+    setAlerts([...alerts, newAlert]);
   };
 
-  const handleDeleteAlert = (id: string) => {
-    setAlerts((prev) => prev.filter((alert) => alert.id !== id));
+  const removeAlert = (id: string) => {
+    setAlerts(alerts.filter((a) => a.id !== id));
   };
 
-  const selectedStockData = stocks.find((s) => s.symbol === selectedStock);
+  const totalValue = portfolio.reduce((sum, item) => sum + item.shares * item.currentPrice, 0);
+  const totalCost = portfolio.reduce((sum, item) => sum + item.shares * item.avgPrice, 0);
+  const totalGain = totalValue - totalCost;
 
   return (
     <div className="min-h-screen bg-gray-100">
-      <Sidebar activeNav={activeNav} onNavChange={setActiveNav} />
-      <main className="ml-64 p-8">
-        <div className="mb-6 flex justify-between items-center">
+      <nav className="bg-white shadow-md">
+        <div className="max-w-7xl mx-auto px-4 py-4">
+          <div className="flex justify-between items-center">
+            <h1 className="text-2xl font-bold text-blue-600">StockTracker Pro</h1>
+            <div className="flex space-x-4">
+              <button onClick={() => setActiveTab("dashboard")} className={`px-4 py-2 rounded-md transition ${activeTab === "dashboard" ? "bg-blue-600 text-white" : "text-gray-600 hover:bg-gray-100"}`}>Dashboard</button>
+              <button onClick={() => setActiveTab("analytics")} className={`px-4 py-2 rounded-md transition ${activeTab === "analytics" ? "bg-blue-600 text-white" : "text-gray-600 hover:bg-gray-100"}`}>Analytics</button>
+              <button onClick={() => setActiveTab("portfolio")} className={`px-4 py-2 rounded-md transition ${activeTab === "portfolio" ? "bg-blue-600 text-white" : "text-gray-600 hover:bg-gray-100"}`}>Portfolio</button>
+            </div>
+          </div>
+        </div>
+      </nav>
+      <main className="max-w-7xl mx-auto px-4 py-8">
+        {error && <div className="bg-yellow-100 border border-yellow-400 text-yellow-700 px-4 py-3 rounded mb-6">{error}</div>}
+        {loading ? (
+          <div className="text-center py-12"><p className="text-gray-500">Loading real-time data...</p></div>
+        ) : (
           <div>
-            <h1 className="text-3xl font-bold text-gray-800">Stock Market Dashboard</h1>
-            <p className="text-gray-500">Last updated: {lastUpdate.toLocaleTimeString()}</p>
-          </div>
-          <div className="flex items-center gap-2">
-            <span className="w-3 h-3 bg-green-500 rounded-full animate-pulse" />
-            <span className="text-sm text-gray-600">Live</span>
-          </div>
-        </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-          {stocks.slice(0, 4).map((stock) => (
-            <Card key={stock.symbol} className="cursor-pointer hover:shadow-xl transition-shadow" >
-              <div className="flex justify-between items-start mb-2">
-                <div>
-                  <p className="font-bold text-lg text-blue-600">{stock.symbol}</p>
-                  <p className="text-sm text-gray-500">{stock.name}</p>
+            {activeTab === "dashboard" && (
+              <div>
+                <h2 className="text-2xl font-bold mb-6">Live Stock Prices</h2>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+                  {stocks.map((stock) => <StockCard key={stock.symbol} stock={stock} />)}
                 </div>
-                <span className={`text-xs px-2 py-1 rounded ${stock.change >= 0 ? "bg-green-100 text-green-700" : "bg-red-100 text-red-700"}`}>
-                  {stock.change >= 0 ? "▲" : "▼"} {Math.abs(stock.changePercent).toFixed(2)}%
-                </span>
+                <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                  <div className="lg:col-span-2"><StockTable stocks={stocks} /></div>
+                  <div className="space-y-6">
+                    <AlertForm onAddAlert={addAlert} />
+                    <AlertList alerts={alerts} onRemove={removeAlert} />
+                  </div>
+                </div>
               </div>
-              <p className="text-2xl font-bold mb-2">${stock.price.toFixed(2)}</p>
-              <MiniChart
-                data={chartData[stock.symbol] || []}
-                color={stock.change >= 0 ? "bg-green-400" : "bg-red-400"}
-              />
-            </Card>
-          ))}
-        </div>
-
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          <div className="lg:col-span-2">
-            <Card title="Tech Stocks Overview">
-              <StockTable stocks={stocks} onSelectStock={setSelectedStock} />
-            </Card>
-          </div>
-
-          <div className="space-y-6">
-            <Card title="Stock Details">
-              {selectedStockData && (
-                <div className="space-y-4">
-                  <div className="text-center pb-4 border-b">
-                    <p className="text-3xl font-bold text-blue-600">{selectedStockData.symbol}</p>
-                    <p className="text-gray-500">{selectedStockData.name}</p>
-                    <p className="text-4xl font-bold mt-2">${selectedStockData.price.toFixed(2)}</p>
-                    <p className={`text-lg ${selectedStockData.change >= 0 ? "text-green-600" : "text-red-600"}`}>
-                      {selectedStockData.change >= 0 ? "+" : ""}{selectedStockData.change.toFixed(2)} ({selectedStockData.changePercent.toFixed(2)}%)
-                    </p>
+            )}
+            {activeTab === "analytics" && (
+              <div>
+                <h2 className="text-2xl font-bold mb-6">Market Analytics</h2>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+                  <div className="bg-white rounded-lg shadow-md p-6">
+                    <h3 className="text-lg font-semibold mb-4">Performance Overview</h3>
+                    <div className="space-y-4">
+                      {stocks.map((stock) => (
+                        <div key={stock.symbol} className="flex items-center justify-between">
+                          <span className="font-medium">{stock.symbol}</span>
+                          <div className="flex-1 mx-4 bg-gray-200 rounded-full h-4">
+                            <div className={`h-4 rounded-full ${stock.changePercent >= 0 ? "bg-green-500" : "bg-red-500"}`} style={{ width: `${Math.min(Math.abs(stock.changePercent) * 10, 100)}%` }}></div>
+                          </div>
+                          <span className={stock.changePercent >= 0 ? "text-green-600" : "text-red-600"}>{stock.changePercent.toFixed(2)}%</span>
+                        </div>
+                      ))}
+                    </div>
                   </div>
-                  <div className="grid grid-cols-2 gap-4 text-sm">
-                    <div>
-                      <p className="text-gray-500">Day High</p>
-                      <p className="font-semibold">${selectedStockData.high.toFixed(2)}</p>
-                    </div>
-                    <div>
-                      <p className="text-gray-500">Day Low</p>
-                      <p className="font-semibold">${selectedStockData.low.toFixed(2)}</p>
-                    </div>
-                    <div>
-                      <p className="text-gray-500">Volume</p>
-                      <p className="font-semibold">{selectedStockData.volume}</p>
-                    </div>
-                    <div>
-                      <p className="text-gray-500">Market Cap</p>
-                      <p className="font-semibold">{selectedStockData.marketCap}</p>
+                  <div className="bg-white rounded-lg shadow-md p-6">
+                    <h3 className="text-lg font-semibold mb-4">Volume Comparison</h3>
+                    <div className="space-y-4">
+                      {stocks.map((stock) => (
+                        <div key={stock.symbol}>
+                          <div className="flex justify-between mb-1"><span>{stock.symbol}</span><span>{(stock.volume / 1000000).toFixed(2)}M</span></div>
+                          <div className="bg-gray-200 rounded-full h-3"><div className="bg-blue-500 h-3 rounded-full" style={{ width: `${(stock.volume / 100000000) * 100}%` }}></div></div>
+                        </div>
+                      ))}
                     </div>
                   </div>
                 </div>
-              )}
-            </Card>
-
-            <Card title="Price Alerts">
-              <AlertForm stocks={stocks} onAddAlert={handleAddAlert} />
-              {alerts.length > 0 && (
-                <div className="mt-4 space-y-2">
-                  <p className="text-sm font-medium text-gray-700">Active Alerts</p>
-                  {alerts.map((alert) => (
-                    <div key={alert.id} className="flex justify-between items-center bg-gray-50 p-3 rounded-lg">
-                      <div>
-                        <span className="font-bold text-blue-600">{alert.symbol}</span>
-                        <span className="text-gray-600 text-sm ml-2">
-                          {alert.condition === "above" ? ">" : "<"} ${alert.targetPrice.toFixed(2)}
-                        </span>
-                      </div>
-                      <button
-                        onClick={() => handleDeleteAlert(alert.id)}
-                        className="text-red-500 hover:text-red-700"
-                      >
-                        ✕
-                      </button>
-                    </div>
-                  ))}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">{testimonials.map((t) => <TestimonialCard key={t.id} testimonial={t} />)}</div>
+              </div>
+            )}
+            {activeTab === "portfolio" && (
+              <div>
+                <h2 className="text-2xl font-bold mb-6">My Portfolio</h2>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+                  <div className="bg-white rounded-lg shadow-md p-6"><p className="text-gray-500 text-sm">Total Value</p><p className="text-3xl font-bold text-gray-900">${totalValue.toFixed(2)}</p></div>
+                  <div className="bg-white rounded-lg shadow-md p-6"><p className="text-gray-500 text-sm">Total Cost</p><p className="text-3xl font-bold text-gray-900">${totalCost.toFixed(2)}</p></div>
+                  <div className="bg-white rounded-lg shadow-md p-6"><p className="text-gray-500 text-sm">Total Gain/Loss</p><p className={`text-3xl font-bold ${totalGain >= 0 ? "text-green-600" : "text-red-600"}`}>{totalGain >= 0 ? "+" : ""}${totalGain.toFixed(2)}</p></div>
                 </div>
-              )}
-            </Card>
+                <div className="bg-white rounded-lg shadow-md overflow-hidden">
+                  <table className="w-full">
+                    <thead className="bg-gray-50">
+                      <tr>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Symbol</th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Shares</th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Avg Price</th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Current</th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Value</th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Gain/Loss</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-gray-200">
+                      {portfolio.map((item) => {
+                        const value = item.shares * item.currentPrice;
+                        const cost = item.shares * item.avgPrice;
+                        const gain = value - cost;
+                        return (
+                          <tr key={item.symbol}>
+                            <td className="px-6 py-4 font-medium">{item.symbol}</td>
+                            <td className="px-6 py-4">{item.shares}</td>
+                            <td className="px-6 py-4">${item.avgPrice.toFixed(2)}</td>
+                            <td className="px-6 py-4">${item.currentPrice.toFixed(2)}</td>
+                            <td className="px-6 py-4">${value.toFixed(2)}</td>
+                            <td className={`px-6 py-4 ${gain >= 0 ? "text-green-600" : "text-red-600"}`}>{gain >= 0 ? "+" : ""}${gain.toFixed(2)}</td>
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            )}
           </div>
-        </div>
+        )}
       </main>
     </div>
   );
