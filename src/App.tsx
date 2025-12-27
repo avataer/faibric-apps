@@ -1,303 +1,220 @@
 import React, { useState } from "react";
 
 // Interfaces
-interface NavItem {
-  id: string;
-  label: string;
-  icon: string;
-  badge?: number;
-}
-
-interface StatCard {
-  id: string;
-  title: string;
-  value: string | number;
-  change: number;
-  changeType: "positive" | "negative" | "neutral";
-  icon: string;
-}
-
-interface ChartDataPoint {
-  timestamp: string;
-  cpu: number;
-  memory: number;
-  network: number;
-}
-
-interface ServerStatus {
+interface Server {
   id: string;
   name: string;
   status: "online" | "offline" | "warning";
+  ipAddress: string;
   cpu: number;
   memory: number;
   uptime: string;
   lastChecked: string;
 }
 
+interface NetworkTraffic {
+  id: string;
+  interface: string;
+  inbound: number;
+  outbound: number;
+  status: "normal" | "high" | "critical";
+}
+
 interface SystemAlert {
   id: string;
-  severity: "critical" | "warning" | "info";
+  severity: "info" | "warning" | "error" | "critical";
   message: string;
   timestamp: string;
   source: string;
 }
 
+interface Service {
+  id: string;
+  name: string;
+  status: "running" | "stopped" | "degraded";
+  port: number;
+  responseTime: number;
+}
+
+interface NavItem {
+  id: string;
+  label: string;
+  icon: string;
+  active: boolean;
+}
+
+interface StatCard {
+  title: string;
+  value: string | number;
+  change: number;
+  icon: string;
+}
+
 // Sample Data
+const servers: Server[] = [
+  { id: "1", name: "Web Server 01", status: "online", ipAddress: "192.168.1.10", cpu: 45, memory: 62, uptime: "45d 12h", lastChecked: "2 min ago" },
+  { id: "2", name: "Database Server", status: "online", ipAddress: "192.168.1.20", cpu: 78, memory: 85, uptime: "30d 8h", lastChecked: "1 min ago" },
+  { id: "3", name: "API Gateway", status: "warning", ipAddress: "192.168.1.30", cpu: 92, memory: 71, uptime: "15d 4h", lastChecked: "30 sec ago" },
+  { id: "4", name: "Cache Server", status: "online", ipAddress: "192.168.1.40", cpu: 23, memory: 45, uptime: "60d 2h", lastChecked: "1 min ago" },
+  { id: "5", name: "File Server", status: "offline", ipAddress: "192.168.1.50", cpu: 0, memory: 0, uptime: "0d 0h", lastChecked: "5 min ago" },
+];
+
+const networkData: NetworkTraffic[] = [
+  { id: "1", interface: "eth0", inbound: 1250, outbound: 890, status: "normal" },
+  { id: "2", interface: "eth1", inbound: 3400, outbound: 2100, status: "high" },
+  { id: "3", interface: "wlan0", inbound: 450, outbound: 320, status: "normal" },
+  { id: "4", interface: "docker0", inbound: 5600, outbound: 4200, status: "critical" },
+];
+
+const alerts: SystemAlert[] = [
+  { id: "1", severity: "critical", message: "File Server is unreachable", timestamp: "5 min ago", source: "File Server" },
+  { id: "2", severity: "warning", message: "High CPU usage detected on API Gateway", timestamp: "10 min ago", source: "API Gateway" },
+  { id: "3", severity: "error", message: "Database connection pool exhausted", timestamp: "15 min ago", source: "Database Server" },
+  { id: "4", severity: "info", message: "Scheduled backup completed successfully", timestamp: "1 hour ago", source: "Backup Service" },
+  { id: "5", severity: "warning", message: "SSL certificate expires in 7 days", timestamp: "2 hours ago", source: "Web Server 01" },
+];
+
+const services: Service[] = [
+  { id: "1", name: "Nginx", status: "running", port: 80, responseTime: 12 },
+  { id: "2", name: "PostgreSQL", status: "running", port: 5432, responseTime: 45 },
+  { id: "3", name: "Redis", status: "running", port: 6379, responseTime: 3 },
+  { id: "4", name: "Elasticsearch", status: "degraded", port: 9200, responseTime: 250 },
+  { id: "5", name: "RabbitMQ", status: "stopped", port: 5672, responseTime: 0 },
+];
+
 const navItems: NavItem[] = [
-  { id: "dashboard", label: "Dashboard", icon: "📊" },
-  { id: "servers", label: "Servers", icon: "🖥️", badge: 12 },
-  { id: "network", label: "Network", icon: "🌐" },
-  { id: "alerts", label: "Alerts", icon: "🔔", badge: 5 },
-  { id: "logs", label: "Logs", icon: "📝" },
-  { id: "settings", label: "Settings", icon: "⚙️" },
+  { id: "1", label: "Dashboard", icon: "📊", active: true },
+  { id: "2", label: "Servers", icon: "🖥️", active: false },
+  { id: "3", label: "Network", icon: "🌐", active: false },
+  { id: "4", label: "Alerts", icon: "🔔", active: false },
+  { id: "5", label: "Services", icon: "⚙️", active: false },
+  { id: "6", label: "Settings", icon: "🔧", active: false },
 ];
 
-const statCards: StatCard[] = [
-  { id: "servers", title: "Active Servers", value: 24, change: 2, changeType: "positive", icon: "🖥️" },
-  { id: "cpu", title: "Avg CPU Usage", value: "67%", change: -5, changeType: "positive", icon: "⚡" },
-  { id: "memory", title: "Memory Usage", value: "82%", change: 8, changeType: "negative", icon: "💾" },
-  { id: "network", title: "Network Traffic", value: "1.2 TB", change: 15, changeType: "neutral", icon: "📡" },
-];
-
-const chartData: ChartDataPoint[] = [
-  { timestamp: "00:00", cpu: 45, memory: 62, network: 30 },
-  { timestamp: "04:00", cpu: 52, memory: 65, network: 35 },
-  { timestamp: "08:00", cpu: 78, memory: 72, network: 65 },
-  { timestamp: "12:00", cpu: 85, memory: 80, network: 80 },
-  { timestamp: "16:00", cpu: 72, memory: 78, network: 70 },
-  { timestamp: "20:00", cpu: 58, memory: 70, network: 45 },
-  { timestamp: "24:00", cpu: 42, memory: 65, network: 32 },
-];
-
-const serverData: ServerStatus[] = [
-  { id: "srv-001", name: "Web Server 01", status: "online", cpu: 45, memory: 62, uptime: "45d 12h", lastChecked: "2 min ago" },
-  { id: "srv-002", name: "Database Primary", status: "online", cpu: 72, memory: 85, uptime: "30d 8h", lastChecked: "1 min ago" },
-  { id: "srv-003", name: "API Gateway", status: "warning", cpu: 89, memory: 78, uptime: "15d 4h", lastChecked: "3 min ago" },
-  { id: "srv-004", name: "Cache Server", status: "online", cpu: 32, memory: 45, uptime: "60d 2h", lastChecked: "1 min ago" },
-  { id: "srv-005", name: "Backup Server", status: "offline", cpu: 0, memory: 0, uptime: "0d 0h", lastChecked: "15 min ago" },
-];
-
-const alertData: SystemAlert[] = [
-  { id: "alt-001", severity: "critical", message: "Backup Server is offline and not responding", timestamp: "10 min ago", source: "srv-005" },
-  { id: "alt-002", severity: "warning", message: "API Gateway CPU usage exceeds 85% threshold", timestamp: "25 min ago", source: "srv-003" },
-  { id: "alt-003", severity: "warning", message: "Database memory usage is approaching limit", timestamp: "1 hour ago", source: "srv-002" },
-  { id: "alt-004", severity: "info", message: "Scheduled maintenance window starting in 2 hours", timestamp: "2 hours ago", source: "system" },
-  { id: "alt-005", severity: "info", message: "SSL certificate renewal completed successfully", timestamp: "3 hours ago", source: "srv-001" },
+const statsData: StatCard[] = [
+  { title: "Total Servers", value: 5, change: 0, icon: "🖥️" },
+  { title: "Online Services", value: 12, change: 2, icon: "✅" },
+  { title: "Active Alerts", value: 5, change: -1, icon: "🔔" },
+  { title: "Avg Response Time", value: "45ms", change: -5, icon: "⚡" },
 ];
 
 // Components
-function Sidebar({ items, activeItem, onSelect }: { items: NavItem[]; activeItem: string; onSelect: (id: string) => void }) {
+function Sidebar({ items, onSelect }: { items: NavItem[]; onSelect: (id: string) => void }) {
   return (
-    <aside className="w-64 bg-slate-900 text-white min-h-screen p-4">
-      <div className="flex items-center gap-3 mb-8 px-2">
-        <span className="text-2xl">🛡️</span>
-        <h1 className="text-xl font-bold">InfraWatch</h1>
+    <aside className="w-64 bg-gray-900 text-white min-h-screen p-4">
+      <div className="mb-8">
+        <h1 className="text-xl font-bold flex items-center gap-2">
+          <span>🛡️</span>
+          <span>IT Monitor</span>
+        </h1>
       </div>
-      <nav className="space-y-1">
-        {items.map((item) => (
-          <button
-            key={item.id}
-            onClick={() => onSelect(item.id)}
-            className={`w-full flex items-center justify-between px-4 py-3 rounded-lg transition-colors ${
-              activeItem === item.id ? "bg-blue-600 text-white" : "text-slate-300 hover:bg-slate-800"
-            }`}
-          >
-            <div className="flex items-center gap-3">
-              <span>{item.icon}</span>
-              <span>{item.label}</span>
-            </div>
-            {item.badge && (
-              <span className="bg-red-500 text-white text-xs px-2 py-0.5 rounded-full">{item.badge}</span>
-            )}
-          </button>
-        ))}
+      <nav>
+        <ul className="space-y-2">
+          {items.map((item) => (
+            <li key={item.id}>
+              <button
+                onClick={() => onSelect(item.id)}
+                className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-colors ${
+                  item.active ? "bg-blue-600 text-white" : "text-gray-300 hover:bg-gray-800"
+                }`}
+              >
+                <span>{item.icon}</span>
+                <span>{item.label}</span>
+              </button>
+            </li>
+          ))}
+        </ul>
       </nav>
-      <div className="absolute bottom-4 left-4 right-4">
-        <div className="bg-slate-800 rounded-lg p-4">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 bg-blue-600 rounded-full flex items-center justify-center">
-              <span>👤</span>
-            </div>
-            <div>
-              <p className="font-medium text-sm">Admin User</p>
-              <p className="text-xs text-slate-400">System Administrator</p>
-            </div>
-          </div>
-        </div>
-      </div>
     </aside>
   );
 }
 
 function StatsCards({ stats }: { stats: StatCard[] }) {
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-      {stats.map((stat) => (
-        <div key={stat.id} className="bg-white rounded-xl shadow-sm p-6 border border-slate-200">
+    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+      {stats.map((stat, index) => (
+        <div key={index} className="bg-white rounded-xl shadow-sm p-6 border border-gray-100">
           <div className="flex items-center justify-between mb-4">
             <span className="text-2xl">{stat.icon}</span>
-            <span
-              className={`text-sm font-medium px-2 py-1 rounded-full ${
-                stat.changeType === "positive"
-                  ? "bg-green-100 text-green-700"
-                  : stat.changeType === "negative"
-                  ? "bg-red-100 text-red-700"
-                  : "bg-slate-100 text-slate-700"
-              }`}
-            >
-              {stat.change > 0 ? "+" : ""}
-              {stat.change}%
+            <span className={`text-sm font-medium ${stat.change >= 0 ? "text-green-600" : "text-red-600"}`}>
+              {stat.change >= 0 ? "+" : ""}{stat.change}%
             </span>
           </div>
-          <h3 className="text-slate-500 text-sm mb-1">{stat.title}</h3>
-          <p className="text-2xl font-bold text-slate-900">{stat.value}</p>
+          <h3 className="text-gray-500 text-sm">{stat.title}</h3>
+          <p className="text-2xl font-bold text-gray-800">{stat.value}</p>
         </div>
       ))}
     </div>
   );
 }
 
-function LineChart({ data }: { data: ChartDataPoint[] }) {
-  const maxValue = 100;
-  const chartHeight = 200;
-  const chartWidth = 100;
-
-  const getY = (value: number) => chartHeight - (value / maxValue) * chartHeight;
-
-  const createPath = (key: "cpu" | "memory" | "network") => {
-    return data
-      .map((point, index) => {
-        const x = (index / (data.length - 1)) * chartWidth;
-        const y = getY(point[key]);
-        return `${index === 0 ? "M" : "L"} ${x} ${y}`;
-      })
-      .join(" ");
+function StatusBadge({ status }: { status: string }) {
+  const colors: Record<string, string> = {
+    online: "bg-green-100 text-green-800",
+    offline: "bg-red-100 text-red-800",
+    warning: "bg-yellow-100 text-yellow-800",
+    running: "bg-green-100 text-green-800",
+    stopped: "bg-red-100 text-red-800",
+    degraded: "bg-orange-100 text-orange-800",
+    normal: "bg-green-100 text-green-800",
+    high: "bg-yellow-100 text-yellow-800",
+    critical: "bg-red-100 text-red-800",
+    info: "bg-blue-100 text-blue-800",
+    error: "bg-red-100 text-red-800",
   };
 
   return (
-    <div className="bg-white rounded-xl shadow-sm p-6 border border-slate-200">
-      <div className="flex items-center justify-between mb-6">
-        <h3 className="text-lg font-semibold text-slate-900">System Performance</h3>
-        <div className="flex gap-4 text-sm">
-          <div className="flex items-center gap-2">
-            <div className="w-3 h-3 rounded-full bg-blue-500"></div>
-            <span className="text-slate-600">CPU</span>
-          </div>
-          <div className="flex items-center gap-2">
-            <div className="w-3 h-3 rounded-full bg-purple-500"></div>
-            <span className="text-slate-600">Memory</span>
-          </div>
-          <div className="flex items-center gap-2">
-            <div className="w-3 h-3 rounded-full bg-green-500"></div>
-            <span className="text-slate-600">Network</span>
-          </div>
-        </div>
-      </div>
-      <div className="relative h-52">
-        <svg viewBox={`0 0 ${chartWidth} ${chartHeight}`} className="w-full h-full" preserveAspectRatio="none">
-          {[0, 25, 50, 75, 100].map((val) => (
-            <line
-              key={val}
-              x1="0"
-              y1={getY(val)}
-              x2={chartWidth}
-              y2={getY(val)}
-              stroke="#e2e8f0"
-              strokeWidth="0.5"
-            />
-          ))}
-          <path d={createPath("cpu")} fill="none" stroke="#3b82f6" strokeWidth="2" />
-          <path d={createPath("memory")} fill="none" stroke="#8b5cf6" strokeWidth="2" />
-          <path d={createPath("network")} fill="none" stroke="#22c55e" strokeWidth="2" />
-        </svg>
-        <div className="absolute bottom-0 left-0 right-0 flex justify-between text-xs text-slate-500 pt-2">
-          {data.map((point) => (
-            <span key={point.timestamp}>{point.timestamp}</span>
-          ))}
-        </div>
-      </div>
+    <span className={`px-2 py-1 rounded-full text-xs font-medium ${colors[status] || "bg-gray-100 text-gray-800"}`}>
+      {status}
+    </span>
+  );
+}
+
+function UsageBar({ value, color }: { value: number; color: string }) {
+  return (
+    <div className="w-full bg-gray-200 rounded-full h-2">
+      <div className={`h-2 rounded-full ${color}`} style={{ width: `${value}%` }}></div>
     </div>
   );
 }
 
-function ServerTable({ servers }: { servers: ServerStatus[] }) {
-  const getStatusColor = (status: ServerStatus["status"]) => {
-    switch (status) {
-      case "online":
-        return "bg-green-100 text-green-700";
-      case "offline":
-        return "bg-red-100 text-red-700";
-      case "warning":
-        return "bg-yellow-100 text-yellow-700";
-    }
-  };
-
-  const getStatusDot = (status: ServerStatus["status"]) => {
-    switch (status) {
-      case "online":
-        return "bg-green-500";
-      case "offline":
-        return "bg-red-500";
-      case "warning":
-        return "bg-yellow-500";
-    }
-  };
-
+function ServerTable({ data }: { data: Server[] }) {
   return (
-    <div className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
-      <div className="px-6 py-4 border-b border-slate-200">
-        <h3 className="text-lg font-semibold text-slate-900">Server Status</h3>
+    <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+      <div className="p-4 border-b border-gray-100">
+        <h2 className="text-lg font-semibold text-gray-800">Server Status</h2>
       </div>
       <div className="overflow-x-auto">
         <table className="w-full">
-          <thead className="bg-slate-50">
+          <thead className="bg-gray-50">
             <tr>
-              <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">Server</th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">Status</th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">CPU</th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">Memory</th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">Uptime</th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">Last Check</th>
+              <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Server</th>
+              <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Status</th>
+              <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">IP Address</th>
+              <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">CPU</th>
+              <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Memory</th>
+              <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Uptime</th>
             </tr>
           </thead>
-          <tbody className="divide-y divide-slate-200">
-            {servers.map((server) => (
-              <tr key={server.id} className="hover:bg-slate-50">
-                <td className="px-6 py-4 whitespace-nowrap">
-                  <div className="flex items-center gap-3">
-                    <div className={`w-2 h-2 rounded-full ${getStatusDot(server.status)} animate-pulse`}></div>
-                    <span className="font-medium text-slate-900">{server.name}</span>
-                  </div>
-                </td>
-                <td className="px-6 py-4 whitespace-nowrap">
-                  <span className={`px-2 py-1 text-xs font-medium rounded-full ${getStatusColor(server.status)}`}>
-                    {server.status.charAt(0).toUpperCase() + server.status.slice(1)}
-                  </span>
-                </td>
-                <td className="px-6 py-4 whitespace-nowrap">
+          <tbody className="divide-y divide-gray-100">
+            {data.map((server) => (
+              <tr key={server.id} className="hover:bg-gray-50">
+                <td className="px-4 py-3 font-medium text-gray-900">{server.name}</td>
+                <td className="px-4 py-3"><StatusBadge status={server.status} /></td>
+                <td className="px-4 py-3 text-gray-600">{server.ipAddress}</td>
+                <td className="px-4 py-3">
                   <div className="flex items-center gap-2">
-                    <div className="w-16 h-2 bg-slate-200 rounded-full overflow-hidden">
-                      <div
-                        className={`h-full rounded-full ${server.cpu > 80 ? "bg-red-500" : server.cpu > 60 ? "bg-yellow-500" : "bg-green-500"}`}
-                        style={{ width: `${server.cpu}%` }}
-                      ></div>
-                    </div>
-                    <span className="text-sm text-slate-600">{server.cpu}%</span>
+                    <UsageBar value={server.cpu} color={server.cpu > 80 ? "bg-red-500" : server.cpu > 60 ? "bg-yellow-500" : "bg-green-500"} />
+                    <span className="text-sm text-gray-600">{server.cpu}%</span>
                   </div>
                 </td>
-                <td className="px-6 py-4 whitespace-nowrap">
+                <td className="px-4 py-3">
                   <div className="flex items-center gap-2">
-                    <div className="w-16 h-2 bg-slate-200 rounded-full overflow-hidden">
-                      <div
-                        className={`h-full rounded-full ${server.memory > 80 ? "bg-red-500" : server.memory > 60 ? "bg-yellow-500" : "bg-green-500"}`}
-                        style={{ width: `${server.memory}%` }}
-                      ></div>
-                    </div>
-                    <span className="text-sm text-slate-600">{server.memory}%</span>
+                    <UsageBar value={server.memory} color={server.memory > 80 ? "bg-red-500" : server.memory > 60 ? "bg-yellow-500" : "bg-green-500"} />
+                    <span className="text-sm text-gray-600">{server.memory}%</span>
                   </div>
                 </td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-600">{server.uptime}</td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-500">{server.lastChecked}</td>
+                <td className="px-4 py-3 text-gray-600">{server.uptime}</td>
               </tr>
             ))}
           </tbody>
@@ -307,69 +224,103 @@ function ServerTable({ servers }: { servers: ServerStatus[] }) {
   );
 }
 
-function AlertsPanel({ alerts }: { alerts: SystemAlert[] }) {
-  const getSeverityStyle = (severity: SystemAlert["severity"]) => {
-    switch (severity) {
-      case "critical":
-        return { bg: "bg-red-50", border: "border-red-200", icon: "🔴", text: "text-red-800" };
-      case "warning":
-        return { bg: "bg-yellow-50", border: "border-yellow-200", icon: "🟡", text: "text-yellow-800" };
-      case "info":
-        return { bg: "bg-blue-50", border: "border-blue-200", icon: "🔵", text: "text-blue-800" };
-    }
-  };
-
+function AlertsCard({ data }: { data: SystemAlert[] }) {
   return (
-    <div className="bg-white rounded-xl shadow-sm border border-slate-200">
-      <div className="px-6 py-4 border-b border-slate-200 flex items-center justify-between">
-        <h3 className="text-lg font-semibold text-slate-900">System Alerts</h3>
-        <span className="bg-red-500 text-white text-xs px-2 py-1 rounded-full">{alerts.filter((a) => a.severity === "critical").length} Critical</span>
+    <div className="bg-white rounded-xl shadow-sm border border-gray-100">
+      <div className="p-4 border-b border-gray-100">
+        <h2 className="text-lg font-semibold text-gray-800">System Alerts</h2>
       </div>
-      <div className="p-4 space-y-3 max-h-80 overflow-y-auto">
-        {alerts.map((alert) => {
-          const style = getSeverityStyle(alert.severity);
-          return (
-            <div key={alert.id} className={`${style.bg} ${style.border} border rounded-lg p-4`}>
-              <div className="flex items-start gap-3">
-                <span className="text-lg">{style.icon}</span>
-                <div className="flex-1">
-                  <p className={`font-medium ${style.text}`}>{alert.message}</p>
-                  <div className="flex items-center gap-4 mt-2 text-xs text-slate-500">
-                    <span>Source: {alert.source}</span>
-                    <span>{alert.timestamp}</span>
-                  </div>
-                </div>
+      <div className="divide-y divide-gray-100 max-h-80 overflow-y-auto">
+        {data.map((alert) => (
+          <div key={alert.id} className="p-4 hover:bg-gray-50">
+            <div className="flex items-start gap-3">
+              <StatusBadge status={alert.severity} />
+              <div className="flex-1">
+                <p className="text-sm text-gray-800">{alert.message}</p>
+                <p className="text-xs text-gray-500 mt-1">{alert.source} • {alert.timestamp}</p>
               </div>
             </div>
-          );
-        })}
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function NetworkCard({ data }: { data: NetworkTraffic[] }) {
+  return (
+    <div className="bg-white rounded-xl shadow-sm border border-gray-100">
+      <div className="p-4 border-b border-gray-100">
+        <h2 className="text-lg font-semibold text-gray-800">Network Traffic</h2>
+      </div>
+      <div className="p-4 space-y-4">
+        {data.map((item) => (
+          <div key={item.id} className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <span className="text-xl">🔌</span>
+              <div>
+                <p className="font-medium text-gray-800">{item.interface}</p>
+                <p className="text-xs text-gray-500">↓ {item.inbound} Mbps | ↑ {item.outbound} Mbps</p>
+              </div>
+            </div>
+            <StatusBadge status={item.status} />
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function ServicesCard({ data }: { data: Service[] }) {
+  return (
+    <div className="bg-white rounded-xl shadow-sm border border-gray-100">
+      <div className="p-4 border-b border-gray-100">
+        <h2 className="text-lg font-semibold text-gray-800">Services Status</h2>
+      </div>
+      <div className="p-4 space-y-3">
+        {data.map((service) => (
+          <div key={service.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+            <div className="flex items-center gap-3">
+              <div className={`w-3 h-3 rounded-full ${service.status === "running" ? "bg-green-500" : service.status === "stopped" ? "bg-red-500" : "bg-orange-500"}`}></div>
+              <div>
+                <p className="font-medium text-gray-800">{service.name}</p>
+                <p className="text-xs text-gray-500">Port: {service.port}</p>
+              </div>
+            </div>
+            <div className="text-right">
+              <StatusBadge status={service.status} />
+              <p className="text-xs text-gray-500 mt-1">{service.responseTime}ms</p>
+            </div>
+          </div>
+        ))}
       </div>
     </div>
   );
 }
 
 function App() {
-  const [activeNav, setActiveNav] = useState("dashboard");
+  const [navState, setNavState] = useState(navItems);
+
+  const handleNavSelect = (id: string) => {
+    setNavState(navState.map((item) => ({ ...item, active: item.id === id })));
+  };
 
   return (
-    <div className="flex min-h-screen bg-slate-100">
-      <Sidebar items={navItems} activeItem={activeNav} onSelect={setActiveNav} />
-      <main className="flex-1 p-8">
-        <div className="mb-8">
-          <h1 className="text-2xl font-bold text-slate-900">Infrastructure Dashboard</h1>
-          <p className="text-slate-500 mt-1">Monitor your systems in real-time</p>
+    <div className="flex min-h-screen bg-gray-100">
+      <Sidebar items={navState} onSelect={handleNavSelect} />
+      <main className="flex-1 p-6">
+        <div className="mb-6">
+          <h1 className="text-2xl font-bold text-gray-800">Infrastructure Dashboard</h1>
+          <p className="text-gray-500">Real-time monitoring of your IT infrastructure</p>
         </div>
-        <div className="space-y-6">
-          <StatsCards stats={statCards} />
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-            <div className="lg:col-span-2">
-              <LineChart data={chartData} />
-            </div>
-            <div className="lg:col-span-1">
-              <AlertsPanel alerts={alertData} />
-            </div>
-          </div>
-          <ServerTable servers={serverData} />
+        <StatsCards stats={statsData} />
+        <div className="mb-6">
+          <ServerTable data={servers} />
+        </div>
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          <AlertsCard data={alerts} />
+          <NetworkCard data={networkData} />
+          <ServicesCard data={services} />
         </div>
       </main>
     </div>
