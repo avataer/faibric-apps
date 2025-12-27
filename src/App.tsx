@@ -371,6 +371,7 @@ function App() {
           <DataTable data={timeSeriesData} />
         </div>
       </main>
+    </div>    </div>
     </div>
   );
 }
