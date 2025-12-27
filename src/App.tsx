@@ -5,38 +5,37 @@ interface ProductionLine {
   id: string;
   name: string;
   status: "running" | "idle" | "maintenance" | "error";
+  efficiency: number;
   currentOutput: number;
   targetOutput: number;
-  efficiency: number;
   operator: string;
-  lastUpdate: string;
 }
 
-interface QualityMetric {
+interface OutputMetric {
   id: string;
   lineName: string;
+  unitsProduced: number;
+  unitsTarget: number;
+  hourlyRate: number;
+  shift: string;
+}
+
+interface QualityIndicator {
+  id: string;
+  lineName: string;
+  defectRate: number;
   passRate: number;
-  defectCount: number;
-  inspectedCount: number;
-  category: string;
+  inspected: number;
+  rejected: number;
 }
 
 interface DowntimeRecord {
   id: string;
-  lineId: string;
   lineName: string;
   reason: string;
   startTime: string;
   duration: number;
-  status: "ongoing" | "resolved";
-}
-
-interface StatsCard {
-  title: string;
-  value: string | number;
-  change: number;
-  icon: string;
-  trend: "up" | "down" | "neutral";
+  resolved: boolean;
 }
 
 interface NavItem {
@@ -46,185 +45,147 @@ interface NavItem {
   active: boolean;
 }
 
-interface FetchState<T> {
-  data: T | null;
-  loading: boolean;
-  error: string | null;
+interface StatCard {
+  title: string;
+  value: string | number;
+  change: number;
+  unit?: string;
 }
 
 // Sample Data
-const sampleProductionLines: ProductionLine[] = [
-  { id: "PL001", name: "Assembly Line A", status: "running", currentOutput: 847, targetOutput: 1000, efficiency: 94.2, operator: "John Smith", lastUpdate: "2 min ago" },
-  { id: "PL002", name: "Assembly Line B", status: "running", currentOutput: 623, targetOutput: 800, efficiency: 87.5, operator: "Sarah Johnson", lastUpdate: "1 min ago" },
-  { id: "PL003", name: "Packaging Line 1", status: "maintenance", currentOutput: 0, targetOutput: 500, efficiency: 0, operator: "Mike Davis", lastUpdate: "15 min ago" },
-  { id: "PL004", name: "Quality Control", status: "running", currentOutput: 1250, targetOutput: 1500, efficiency: 91.8, operator: "Emma Wilson", lastUpdate: "30 sec ago" },
-  { id: "PL005", name: "Welding Station", status: "error", currentOutput: 156, targetOutput: 400, efficiency: 45.2, operator: "Tom Brown", lastUpdate: "5 min ago" },
-  { id: "PL006", name: "CNC Machining", status: "idle", currentOutput: 0, targetOutput: 300, efficiency: 0, operator: "Lisa Anderson", lastUpdate: "10 min ago" },
+const productionLines: ProductionLine[] = [
+  { id: "L1", name: "Assembly Line A", status: "running", efficiency: 94.5, currentOutput: 1250, targetOutput: 1300, operator: "John Smith" },
+  { id: "L2", name: "Assembly Line B", status: "running", efficiency: 88.2, currentOutput: 980, targetOutput: 1100, operator: "Maria Garcia" },
+  { id: "L3", name: "Packaging Line 1", status: "idle", efficiency: 0, currentOutput: 450, targetOutput: 800, operator: "David Chen" },
+  { id: "L4", name: "Packaging Line 2", status: "maintenance", efficiency: 0, currentOutput: 0, targetOutput: 800, operator: "Sarah Wilson" },
+  { id: "L5", name: "Quality Control", status: "running", efficiency: 97.8, currentOutput: 2100, targetOutput: 2200, operator: "Mike Johnson" },
+  { id: "L6", name: "Finishing Line", status: "error", efficiency: 45.0, currentOutput: 320, targetOutput: 700, operator: "Lisa Brown" },
 ];
 
-const sampleQualityMetrics: QualityMetric[] = [
-  { id: "QM001", lineName: "Assembly Line A", passRate: 98.5, defectCount: 12, inspectedCount: 800, category: "Dimensional" },
-  { id: "QM002", lineName: "Assembly Line B", passRate: 96.2, defectCount: 24, inspectedCount: 630, category: "Visual" },
-  { id: "QM003", lineName: "Quality Control", passRate: 99.1, defectCount: 11, inspectedCount: 1200, category: "Functional" },
-  { id: "QM004", lineName: "Welding Station", passRate: 89.5, defectCount: 16, inspectedCount: 152, category: "Structural" },
+const outputMetrics: OutputMetric[] = [
+  { id: "O1", lineName: "Assembly Line A", unitsProduced: 1250, unitsTarget: 1300, hourlyRate: 156, shift: "Morning" },
+  { id: "O2", lineName: "Assembly Line B", unitsProduced: 980, unitsTarget: 1100, hourlyRate: 122, shift: "Morning" },
+  { id: "O3", lineName: "Packaging Line 1", unitsProduced: 450, unitsTarget: 800, hourlyRate: 56, shift: "Morning" },
+  { id: "O4", lineName: "Quality Control", unitsProduced: 2100, unitsTarget: 2200, hourlyRate: 262, shift: "Morning" },
 ];
 
-const sampleDowntimeRecords: DowntimeRecord[] = [
-  { id: "DT001", lineId: "PL003", lineName: "Packaging Line 1", reason: "Scheduled Maintenance", startTime: "08:30 AM", duration: 120, status: "ongoing" },
-  { id: "DT002", lineId: "PL005", lineName: "Welding Station", reason: "Equipment Malfunction", startTime: "10:15 AM", duration: 45, status: "ongoing" },
-  { id: "DT003", lineId: "PL002", lineName: "Assembly Line B", reason: "Material Shortage", startTime: "07:00 AM", duration: 30, status: "resolved" },
-  { id: "DT004", lineId: "PL006", lineName: "CNC Machining", reason: "Operator Break", startTime: "11:00 AM", duration: 15, status: "ongoing" },
+const qualityIndicators: QualityIndicator[] = [
+  { id: "Q1", lineName: "Assembly Line A", defectRate: 1.2, passRate: 98.8, inspected: 1265, rejected: 15 },
+  { id: "Q2", lineName: "Assembly Line B", defectRate: 2.1, passRate: 97.9, inspected: 1000, rejected: 21 },
+  { id: "Q3", lineName: "Packaging Line 1", defectRate: 0.8, passRate: 99.2, inspected: 454, rejected: 4 },
+  { id: "Q4", lineName: "Finishing Line", defectRate: 3.5, passRate: 96.5, inspected: 331, rejected: 11 },
+];
+
+const downtimeRecords: DowntimeRecord[] = [
+  { id: "D1", lineName: "Packaging Line 1", reason: "Material shortage", startTime: "09:45", duration: 45, resolved: false },
+  { id: "D2", lineName: "Packaging Line 2", reason: "Scheduled maintenance", startTime: "08:00", duration: 120, resolved: false },
+  { id: "D3", lineName: "Finishing Line", reason: "Equipment malfunction", startTime: "10:15", duration: 30, resolved: false },
+  { id: "D4", lineName: "Assembly Line A", reason: "Shift change", startTime: "06:00", duration: 15, resolved: true },
 ];
 
 const navItems: NavItem[] = [
   { id: "dashboard", label: "Dashboard", icon: "📊", active: true },
-  { id: "production", label: "Production Lines", icon: "🏭", active: false },
-  { id: "quality", label: "Quality Control", icon: "✅", active: false },
-  { id: "downtime", label: "Downtime Tracking", icon: "⏱️", active: false },
+  { id: "production", label: "Production", icon: "🏭", active: false },
+  { id: "quality", label: "Quality", icon: "✅", active: false },
+  { id: "maintenance", label: "Maintenance", icon: "🔧", active: false },
   { id: "reports", label: "Reports", icon: "📈", active: false },
   { id: "settings", label: "Settings", icon: "⚙️", active: false },
 ];
 
-// Custom Hook for Data Fetching Simulation
-function useDataFetcher<T>(initialData: T, refreshInterval: number = 5000): FetchState<T> {
-  const [state, setState] = useState<FetchState<T>>({
-    data: initialData,
-    loading: false,
-    error: null,
-  });
-
-  useEffect(() => {
-    const interval = setInterval(() => {
-      setState(prev => ({ ...prev, data: initialData }));
-    }, refreshInterval);
-    return () => clearInterval(interval);
-  }, [initialData, refreshInterval]);
-
-  return state;
-}
-
-// Navigation Sidebar Component
-function NavigationSidebar({ items, onSelect }: { items: NavItem[]; onSelect: (id: string) => void }) {
+// Components
+function Sidebar({ items, onSelect }: { items: NavItem[]; onSelect: (id: string) => void }) {
   return (
-    <aside className="w-64 bg-slate-900 text-white min-h-screen p-4">
-      <div className="mb-8">
-        <h1 className="text-xl font-bold flex items-center gap-2">
-          <span className="text-2xl">🏭</span>
-          Manufacturing Hub
-        </h1>
+    <aside className="w-64 bg-slate-800 text-white min-h-screen p-4">
+      <div className="text-xl font-bold mb-8 p-2">
+        🏭 Manufacturing Hub
       </div>
-      <nav className="space-y-2">
-        {items.map(item => (
+      <nav>
+        {items.map((item) => (
           <button
             key={item.id}
             onClick={() => onSelect(item.id)}
-            className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-all ${
-              item.active
-                ? "bg-blue-600 text-white"
-                : "text-slate-300 hover:bg-slate-800"
+            className={`w-full text-left p-3 rounded-lg mb-2 flex items-center gap-3 transition-colors ${
+              item.active ? "bg-blue-600" : "hover:bg-slate-700"
             }`}
           >
-            <span className="text-lg">{item.icon}</span>
-            <span className="font-medium">{item.label}</span>
+            <span>{item.icon}</span>
+            <span>{item.label}</span>
           </button>
         ))}
       </nav>
-      <div className="mt-auto pt-8 border-t border-slate-700 mt-8">
-        <div className="flex items-center gap-3 px-4">
-          <div className="w-10 h-10 bg-blue-500 rounded-full flex items-center justify-center font-bold">
-            AD
-          </div>
-          <div>
-            <p className="font-medium">Admin User</p>
-            <p className="text-sm text-slate-400">Plant Manager</p>
-          </div>
-        </div>
-      </div>
     </aside>
   );
 }
 
-// Stats Cards Component
-function StatsCards({ cards }: { cards: StatsCard[] }) {
+function StatCard({ title, value, change, unit }: StatCard) {
+  const isPositive = change >= 0;
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-      {cards.map((card, index) => (
-        <div key={index} className="bg-white rounded-xl shadow-sm p-6 border border-slate-100">
-          <div className="flex items-center justify-between mb-4">
-            <span className="text-3xl">{card.icon}</span>
-            <span className={`text-sm font-medium px-2 py-1 rounded-full ${
-              card.trend === "up" ? "bg-green-100 text-green-700" :
-              card.trend === "down" ? "bg-red-100 text-red-700" :
-              "bg-slate-100 text-slate-700"
-            }`}>
-              {card.trend === "up" ? "↑" : card.trend === "down" ? "↓" : "→"} {Math.abs(card.change)}%
-            </span>
-          </div>
-          <h3 className="text-slate-500 text-sm font-medium">{card.title}</h3>
-          <p className="text-2xl font-bold text-slate-900 mt-1">{card.value}</p>
-        </div>
-      ))}
+    <div className="bg-white rounded-xl shadow-md p-6">
+      <h3 className="text-gray-500 text-sm font-medium">{title}</h3>
+      <div className="mt-2 flex items-baseline gap-2">
+        <span className="text-3xl font-bold text-gray-900">{value}</span>
+        {unit && <span className="text-gray-500">{unit}</span>}
+      </div>
+      <div className={`mt-2 text-sm ${isPositive ? "text-green-600" : "text-red-600"}`}>
+        {isPositive ? "↑" : "↓"} {Math.abs(change)}% vs last hour
+      </div>
     </div>
   );
 }
 
-// Production Line Status Table
-function ProductionLineTable({ data }: { data: ProductionLine[] }) {
-  const getStatusBadge = (status: ProductionLine["status"]) => {
-    const styles = {
-      running: "bg-green-100 text-green-700",
-      idle: "bg-yellow-100 text-yellow-700",
-      maintenance: "bg-blue-100 text-blue-700",
-      error: "bg-red-100 text-red-700",
-    };
-    return styles[status];
+function StatusBadge({ status }: { status: string }) {
+  const colors: Record<string, string> = {
+    running: "bg-green-100 text-green-800",
+    idle: "bg-yellow-100 text-yellow-800",
+    maintenance: "bg-blue-100 text-blue-800",
+    error: "bg-red-100 text-red-800",
   };
-
   return (
-    <div className="bg-white rounded-xl shadow-sm border border-slate-100 overflow-hidden">
-      <div className="px-6 py-4 border-b border-slate-100">
-        <h2 className="text-lg font-semibold text-slate-900">Production Line Status</h2>
+    <span className={`px-3 py-1 rounded-full text-xs font-medium ${colors[status] || "bg-gray-100"}`}>
+      {status.charAt(0).toUpperCase() + status.slice(1)}
+    </span>
+  );
+}
+
+function ProductionTable({ data }: { data: ProductionLine[] }) {
+  return (
+    <div className="bg-white rounded-xl shadow-md overflow-hidden">
+      <div className="p-4 border-b">
+        <h2 className="text-lg font-semibold">Production Line Status</h2>
       </div>
       <div className="overflow-x-auto">
         <table className="w-full">
-          <thead className="bg-slate-50">
+          <thead className="bg-gray-50">
             <tr>
-              <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase">Line</th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase">Status</th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase">Output</th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase">Efficiency</th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase">Operator</th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase">Updated</th>
+              <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Line</th>
+              <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Status</th>
+              <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Efficiency</th>
+              <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Output</th>
+              <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Operator</th>
             </tr>
           </thead>
-          <tbody className="divide-y divide-slate-100">
-            {data.map(line => (
-              <tr key={line.id} className="hover:bg-slate-50">
-                <td className="px-6 py-4">
-                  <div className="font-medium text-slate-900">{line.name}</div>
-                  <div className="text-sm text-slate-500">{line.id}</div>
+          <tbody className="divide-y divide-gray-200">
+            {data.map((line) => (
+              <tr key={line.id} className="hover:bg-gray-50">
+                <td className="px-4 py-4 font-medium">{line.name}</td>
+                <td className="px-4 py-4">
+                  <StatusBadge status={line.status} />
                 </td>
-                <td className="px-6 py-4">
-                  <span className={`px-3 py-1 rounded-full text-xs font-medium capitalize ${getStatusBadge(line.status)}`}>
-                    {line.status}
-                  </span>
-                </td>
-                <td className="px-6 py-4">
-                  <div className="text-slate-900">{line.currentOutput} / {line.targetOutput}</div>
-                  <div className="w-24 h-2 bg-slate-200 rounded-full mt-1">
-                    <div
-                      className="h-full bg-blue-500 rounded-full"
-                      style={{ width: `${(line.currentOutput / line.targetOutput) * 100}%` }}
-                    />
+                <td className="px-4 py-4">
+                  <div className="flex items-center gap-2">
+                    <div className="w-24 bg-gray-200 rounded-full h-2">
+                      <div
+                        className="bg-blue-600 h-2 rounded-full"
+                        style={{ width: `${line.efficiency}%` }}
+                      ></div>
+                    </div>
+                    <span className="text-sm">{line.efficiency}%</span>
                   </div>
                 </td>
-                <td className="px-6 py-4">
-                  <span className={`font-medium ${line.efficiency >= 90 ? "text-green-600" : line.efficiency >= 70 ? "text-yellow-600" : "text-red-600"}`}>
-                    {line.efficiency}%
-                  </span>
+                <td className="px-4 py-4">
+                  {line.currentOutput} / {line.targetOutput}
                 </td>
-                <td className="px-6 py-4 text-slate-700">{line.operator}</td>
-                <td className="px-6 py-4 text-slate-500 text-sm">{line.lastUpdate}</td>
+                <td className="px-4 py-4 text-gray-600">{line.operator}</td>
               </tr>
             ))}
           </tbody>
@@ -234,164 +195,141 @@ function ProductionLineTable({ data }: { data: ProductionLine[] }) {
   );
 }
 
-// Quality Metrics Component
-function QualityMetricsPanel({ data }: { data: QualityMetric[] }) {
+function QualityTable({ data }: { data: QualityIndicator[] }) {
   return (
-    <div className="bg-white rounded-xl shadow-sm border border-slate-100">
-      <div className="px-6 py-4 border-b border-slate-100">
-        <h2 className="text-lg font-semibold text-slate-900">Quality Indicators</h2>
+    <div className="bg-white rounded-xl shadow-md overflow-hidden">
+      <div className="p-4 border-b">
+        <h2 className="text-lg font-semibold">Quality Indicators</h2>
       </div>
-      <div className="p-6 grid grid-cols-1 md:grid-cols-2 gap-4">
-        {data.map(metric => (
-          <div key={metric.id} className="border border-slate-200 rounded-lg p-4">
-            <div className="flex justify-between items-start mb-3">
-              <h3 className="font-medium text-slate-900">{metric.lineName}</h3>
-              <span className="text-xs bg-slate-100 text-slate-600 px-2 py-1 rounded">{metric.category}</span>
-            </div>
-            <div className="flex items-center gap-4">
-              <div className="flex-1">
-                <div className="text-2xl font-bold text-slate-900">{metric.passRate}%</div>
-                <div className="text-sm text-slate-500">Pass Rate</div>
-              </div>
-              <div className="text-right">
-                <div className="text-lg font-semibold text-red-600">{metric.defectCount}</div>
-                <div className="text-sm text-slate-500">Defects</div>
-              </div>
-              <div className="text-right">
-                <div className="text-lg font-semibold text-slate-700">{metric.inspectedCount}</div>
-                <div className="text-sm text-slate-500">Inspected</div>
-              </div>
-            </div>
-          </div>
-        ))}
+      <div className="overflow-x-auto">
+        <table className="w-full">
+          <thead className="bg-gray-50">
+            <tr>
+              <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Line</th>
+              <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Pass Rate</th>
+              <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Defect Rate</th>
+              <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Inspected</th>
+              <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Rejected</th>
+            </tr>
+          </thead>
+          <tbody className="divide-y divide-gray-200">
+            {data.map((item) => (
+              <tr key={item.id} className="hover:bg-gray-50">
+                <td className="px-4 py-4 font-medium">{item.lineName}</td>
+                <td className="px-4 py-4">
+                  <span className={`font-medium ${item.passRate >= 98 ? "text-green-600" : item.passRate >= 95 ? "text-yellow-600" : "text-red-600"}`}>
+                    {item.passRate}%
+                  </span>
+                </td>
+                <td className="px-4 py-4">
+                  <span className={`${item.defectRate <= 1.5 ? "text-green-600" : item.defectRate <= 3 ? "text-yellow-600" : "text-red-600"}`}>
+                    {item.defectRate}%
+                  </span>
+                </td>
+                <td className="px-4 py-4">{item.inspected}</td>
+                <td className="px-4 py-4 text-red-600">{item.rejected}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
       </div>
     </div>
   );
 }
 
-// Downtime Tracking Component
-function DowntimeTracker({ data }: { data: DowntimeRecord[] }) {
+function DowntimeTable({ data }: { data: DowntimeRecord[] }) {
   return (
-    <div className="bg-white rounded-xl shadow-sm border border-slate-100">
-      <div className="px-6 py-4 border-b border-slate-100 flex justify-between items-center">
-        <h2 className="text-lg font-semibold text-slate-900">Downtime Tracking</h2>
-        <span className="text-sm text-slate-500">{data.filter(d => d.status === "ongoing").length} active issues</span>
+    <div className="bg-white rounded-xl shadow-md overflow-hidden">
+      <div className="p-4 border-b">
+        <h2 className="text-lg font-semibold">Downtime Tracking</h2>
       </div>
-      <div className="divide-y divide-slate-100">
-        {data.map(record => (
-          <div key={record.id} className="px-6 py-4 flex items-center justify-between">
-            <div className="flex items-center gap-4">
-              <div className={`w-3 h-3 rounded-full ${record.status === "ongoing" ? "bg-red-500 animate-pulse" : "bg-green-500"}`} />
-              <div>
-                <div className="font-medium text-slate-900">{record.lineName}</div>
-                <div className="text-sm text-slate-500">{record.reason}</div>
-              </div>
-            </div>
-            <div className="text-right">
-              <div className="text-slate-900 font-medium">{record.duration} min</div>
-              <div className="text-sm text-slate-500">Started: {record.startTime}</div>
-            </div>
-            <span className={`px-3 py-1 rounded-full text-xs font-medium ${
-              record.status === "ongoing" ? "bg-red-100 text-red-700" : "bg-green-100 text-green-700"
-            }`}>
-              {record.status}
-            </span>
-          </div>
-        ))}
+      <div className="overflow-x-auto">
+        <table className="w-full">
+          <thead className="bg-gray-50">
+            <tr>
+              <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Line</th>
+              <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Reason</th>
+              <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Start</th>
+              <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Duration</th>
+              <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Status</th>
+            </tr>
+          </thead>
+          <tbody className="divide-y divide-gray-200">
+            {data.map((record) => (
+              <tr key={record.id} className="hover:bg-gray-50">
+                <td className="px-4 py-4 font-medium">{record.lineName}</td>
+                <td className="px-4 py-4">{record.reason}</td>
+                <td className="px-4 py-4">{record.startTime}</td>
+                <td className="px-4 py-4">{record.duration} min</td>
+                <td className="px-4 py-4">
+                  <span className={`px-3 py-1 rounded-full text-xs font-medium ${record.resolved ? "bg-green-100 text-green-800" : "bg-red-100 text-red-800"}`}>
+                    {record.resolved ? "Resolved" : "Active"}
+                  </span>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
       </div>
     </div>
   );
 }
 
-// Real-time Stats Display
-function RealTimeStats() {
-  const [tick, setTick] = useState(0);
+function App() {
+  const [nav, setNav] = useState(navItems);
+  const [currentTime, setCurrentTime] = useState(new Date());
+  const [totalOutput, setTotalOutput] = useState(5100);
 
   useEffect(() => {
-    const interval = setInterval(() => setTick(t => t + 1), 1000);
-    return () => clearInterval(interval);
+    const timer = setInterval(() => {
+      setCurrentTime(new Date());
+      setTotalOutput((prev) => prev + Math.floor(Math.random() * 5));
+    }, 1000);
+    return () => clearInterval(timer);
   }, []);
 
-  return (
-    <div className="bg-gradient-to-r from-blue-600 to-blue-700 rounded-xl p-6 text-white mb-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h2 className="text-lg font-semibold mb-1">Real-Time Production</h2>
-          <p className="text-blue-200 text-sm">Live data updates every second</p>
-        </div>
-        <div className="flex items-center gap-2">
-          <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse" />
-          <span className="text-sm">Live</span>
-        </div>
-      </div>
-      <div className="grid grid-cols-4 gap-6 mt-6">
-        <div>
-          <div className="text-3xl font-bold">{2876 + (tick % 10)}</div>
-          <div className="text-blue-200 text-sm">Units Produced Today</div>
-        </div>
-        <div>
-          <div className="text-3xl font-bold">{91.2 + (tick % 5) * 0.1}%</div>
-          <div className="text-blue-200 text-sm">Overall Efficiency</div>
-        </div>
-        <div>
-          <div className="text-3xl font-bold">4 / 6</div>
-          <div className="text-blue-200 text-sm">Lines Active</div>
-        </div>
-        <div>
-          <div className="text-3xl font-bold">{165 + tick}</div>
-          <div className="text-blue-200 text-sm">Minutes Uptime</div>
-        </div>
-      </div>
-    </div>
-  );
-}
-
-// Main App Component
-function App() {
-  const [activeNav, setActiveNav] = useState("dashboard");
-  const [navItemsState, setNavItemsState] = useState(navItems);
-
-  const productionData = useDataFetcher(sampleProductionLines);
-  const qualityData = useDataFetcher(sampleQualityMetrics);
-  const downtimeData = useDataFetcher(sampleDowntimeRecords);
-
   const handleNavSelect = (id: string) => {
-    setActiveNav(id);
-    setNavItemsState(items =>
-      items.map(item => ({ ...item, active: item.id === id }))
-    );
+    setNav(nav.map((item) => ({ ...item, active: item.id === id })));
   };
 
-  const statsCards: StatsCard[] = [
-    { title: "Total Output", value: "2,876", change: 12.5, icon: "📦", trend: "up" },
-    { title: "Average Efficiency", value: "91.2%", change: 3.2, icon: "⚡", trend: "up" },
-    { title: "Quality Rate", value: "97.8%", change: 0.5, icon: "✅", trend: "up" },
-    { title: "Downtime Hours", value: "2.5h", change: -15, icon: "⏰", trend: "down" },
+  const stats: StatCard[] = [
+    { title: "Total Output", value: totalOutput.toLocaleString(), change: 5.2, unit: "units" },
+    { title: "Overall Efficiency", value: "87.3", change: 2.1, unit: "%" },
+    { title: "Active Lines", value: "4/6", change: 0, unit: "" },
+    { title: "Total Downtime", value: "210", change: -12.5, unit: "min" },
   ];
 
   return (
-    <div className="flex min-h-screen bg-slate-50">
-      <NavigationSidebar items={navItemsState} onSelect={handleNavSelect} />
+    <div className="flex min-h-screen bg-gray-100">
+      <Sidebar items={nav} onSelect={handleNavSelect} />
       <main className="flex-1 p-8">
-        <header className="mb-8">
-          <h1 className="text-2xl font-bold text-slate-900">Production Dashboard</h1>
-          <p className="text-slate-500">Monitor and manage manufacturing operations in real-time</p>
-        </header>
-
-        <RealTimeStats />
-        <StatsCards cards={statsCards} />
-
-        <div className="mb-6">
-          {productionData.data && <ProductionLineTable data={productionData.data} />}
+        <div className="mb-8 flex justify-between items-center">
+          <div>
+            <h1 className="text-2xl font-bold text-gray-900">Production Dashboard</h1>
+            <p className="text-gray-500">Real-time manufacturing overview</p>
+          </div>
+          <div className="text-right">
+            <div className="text-2xl font-mono font-bold text-gray-900">
+              {currentTime.toLocaleTimeString()}
+            </div>
+            <div className="text-sm text-gray-500">
+              {currentTime.toLocaleDateString("en-US", { weekday: "long", year: "numeric", month: "long", day: "numeric" })}
+            </div>
+          </div>
         </div>
-
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          {qualityData.data && <QualityMetricsPanel data={qualityData.data} />}
-          {downtimeData.data && <DowntimeTracker data={downtimeData.data} />}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+          {stats.map((stat, index) => (
+            <StatCard key={index} {...stat} />
+          ))}
+        </div>
+        <div className="space-y-8">
+          <ProductionTable data={productionLines} />
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+            <QualityTable data={qualityIndicators} />
+            <DowntimeTable data={downtimeRecords} />
+          </div>
         </div>
       </main>
-    </div>    </div>
-    </div>
     </div>
   );
 }
