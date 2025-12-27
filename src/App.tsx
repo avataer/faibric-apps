@@ -8,25 +8,27 @@ interface NavItem {
 
 interface NavigationHeaderProps {
   title: string;
-  items: NavItem[];
-  onNavClick: (label: string) => void;
+  navItems: NavItem[];
+  onNavClick: (item: NavItem) => void;
 }
 
-function NavigationHeader({ title, items, onNavClick }: NavigationHeaderProps) {
+function NavigationHeader({ title, navItems, onNavClick }: NavigationHeaderProps) {
   return (
-    <header className="bg-slate-800 text-white shadow-lg">
-      <div className="max-w-7xl mx-auto px-4 py-4">
-        <div className="flex items-center justify-between">
-          <h1 className="text-2xl font-bold text-blue-400">{title}</h1>
-          <nav className="flex space-x-6">
-            {items.map((item) => (
+    <header className="bg-white shadow-sm border-b border-gray-200">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="flex justify-between items-center h-16">
+          <div className="flex items-center">
+            <h1 className="text-xl font-bold text-indigo-600">{title}</h1>
+          </div>
+          <nav className="flex space-x-4">
+            {navItems.map((item, index) => (
               <button
-                key={item.label}
-                onClick={() => onNavClick(item.label)}
-                className={`px-3 py-2 rounded-md transition-colors ${
+                key={index}
+                onClick={() => onNavClick(item)}
+                className={`px-3 py-2 rounded-md text-sm font-medium transition-colors ${
                   item.active
-                    ? "bg-blue-600 text-white"
-                    : "text-gray-300 hover:bg-slate-700"
+                    ? "bg-indigo-100 text-indigo-700"
+                    : "text-gray-600 hover:text-gray-900 hover:bg-gray-100"
                 }`}
               >
                 {item.label}
@@ -41,19 +43,17 @@ function NavigationHeader({ title, items, onNavClick }: NavigationHeaderProps) {
 
 interface CardProps {
   title: string;
-  subtitle?: string;
   children: React.ReactNode;
   className?: string;
 }
 
-function Card({ title, subtitle, children, className = "" }: CardProps) {
+function Card({ title, children, className = "" }: CardProps) {
   return (
-    <div className={`bg-white rounded-xl shadow-md overflow-hidden ${className}`}>
-      <div className="p-6">
+    <div className={`bg-white rounded-lg shadow-md border border-gray-200 ${className}`}>
+      <div className="px-4 py-3 border-b border-gray-200">
         <h3 className="text-lg font-semibold text-gray-800">{title}</h3>
-        {subtitle && <p className="text-sm text-gray-500 mt-1">{subtitle}</p>}
-        <div className="mt-4">{children}</div>
       </div>
+      <div className="p-4">{children}</div>
     </div>
   );
 }
@@ -78,22 +78,22 @@ function Table({ columns, data }: TableProps) {
       <table className="min-w-full divide-y divide-gray-200">
         <thead className="bg-gray-50">
           <tr>
-            {columns.map((col) => (
+            {columns.map((column) => (
               <th
-                key={col.key}
-                className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                key={column.key}
+                className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
               >
-                {col.header}
+                {column.header}
               </th>
             ))}
           </tr>
         </thead>
         <tbody className="bg-white divide-y divide-gray-200">
-          {data.map((row, idx) => (
-            <tr key={idx} className="hover:bg-gray-50">
-              {columns.map((col) => (
-                <td key={col.key} className="px-6 py-4 whitespace-nowrap text-sm text-gray-700">
-                  {row[col.key]}
+          {data.map((row, rowIndex) => (
+            <tr key={rowIndex} className="hover:bg-gray-50">
+              {columns.map((column) => (
+                <td key={column.key} className="px-4 py-3 whitespace-nowrap text-sm text-gray-700">
+                  {row[column.key]}
                 </td>
               ))}
             </tr>
@@ -115,7 +115,7 @@ interface LineChartProps {
   color?: string;
 }
 
-function LineChart({ title, data, color = "blue" }: LineChartProps) {
+function LineChart({ title, data, color = "#4F46E5" }: LineChartProps) {
   const maxValue = Math.max(...data.map((d) => d.value));
   const minValue = Math.min(...data.map((d) => d.value));
   const range = maxValue - minValue || 1;
@@ -128,42 +128,23 @@ function LineChart({ title, data, color = "blue" }: LineChartProps) {
     })
     .join(" ");
 
-  const colorClasses: Record<string, string> = {
-    blue: "stroke-blue-500",
-    green: "stroke-green-500",
-    red: "stroke-red-500",
-    purple: "stroke-purple-500",
-  };
-
   return (
-    <div className="bg-white rounded-xl shadow-md p-6">
-      <h3 className="text-lg font-semibold text-gray-800 mb-4">{title}</h3>
-      <div className="relative h-48">
+    <div className="w-full">
+      <h4 className="text-sm font-medium text-gray-700 mb-2">{title}</h4>
+      <div className="relative h-48 bg-gray-50 rounded-lg p-4">
         <svg viewBox="0 0 100 100" className="w-full h-full" preserveAspectRatio="none">
-          <polyline
-            fill="none"
-            className={`${colorClasses[color] || colorClasses.blue} stroke-2`}
-            points={points}
-          />
+          <polyline fill="none" stroke={color} strokeWidth="2" points={points} />
           {data.map((d, i) => {
             const x = (i / (data.length - 1)) * 100;
             const y = 100 - ((d.value - minValue) / range) * 80 - 10;
-            return (
-              <circle
-                key={i}
-                cx={x}
-                cy={y}
-                r="2"
-                className={`fill-current text-${color}-500`}
-              />
-            );
+            return <circle key={i} cx={x} cy={y} r="2" fill={color} />;
           })}
         </svg>
-      </div>
-      <div className="flex justify-between mt-2 text-xs text-gray-500">
-        {data.map((d, i) => (
-          <span key={i}>{d.label}</span>
-        ))}
+        <div className="flex justify-between mt-2 text-xs text-gray-500">
+          {data.map((d, i) => (
+            <span key={i}>{d.label}</span>
+          ))}
+        </div>
       </div>
     </div>
   );
@@ -194,12 +175,10 @@ function Form({ fields, onSubmit, submitLabel }: FormProps) {
     <form onSubmit={handleSubmit} className="space-y-4">
       {fields.map((field) => (
         <div key={field.name}>
-          <label className="block text-sm font-medium text-gray-700 mb-1">
-            {field.label}
-          </label>
+          <label className="block text-sm font-medium text-gray-700 mb-1">{field.label}</label>
           {field.type === "select" ? (
             <select
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500"
               onChange={(e) => setFormData({ ...formData, [field.name]: e.target.value })}
             >
               <option value="">Select...</option>
@@ -212,7 +191,7 @@ function Form({ fields, onSubmit, submitLabel }: FormProps) {
           ) : (
             <input
               type={field.type}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500"
               onChange={(e) => setFormData({ ...formData, [field.name]: e.target.value })}
             />
           )}
@@ -220,7 +199,7 @@ function Form({ fields, onSubmit, submitLabel }: FormProps) {
       ))}
       <button
         type="submit"
-        className="w-full bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700 transition-colors"
+        className="w-full bg-indigo-600 text-white py-2 px-4 rounded-md hover:bg-indigo-700 transition-colors"
       >
         {submitLabel}
       </button>
@@ -248,117 +227,122 @@ function App() {
   const surveyData: TableRow[] = [
     { question: "Product Quality", responses: 1250, satisfaction: 87, trend: "↑" },
     { question: "Customer Service", responses: 1180, satisfaction: 92, trend: "↑" },
-    { question: "Price Value", responses: 1300, satisfaction: 78, trend: "→" },
-    { question: "Ease of Use", responses: 1420, satisfaction: 85, trend: "↑" },
-    { question: "Would Recommend", responses: 1380, satisfaction: 89, trend: "↓" },
+    { question: "Price Value", responses: 1320, satisfaction: 74, trend: "→" },
+    { question: "Brand Trust", responses: 1100, satisfaction: 81, trend: "↑" },
+    { question: "Would Recommend", responses: 1400, satisfaction: 89, trend: "↑" },
   ];
 
   const competitors = [
-    { name: "CompanyA", marketShare: "32%", strength: "Brand Recognition", weakness: "High Prices" },
-    { name: "CompanyB", marketShare: "24%", strength: "Innovation", weakness: "Limited Support" },
-    { name: "CompanyC", marketShare: "18%", strength: "Low Cost", weakness: "Quality Issues" },
+    { name: "CompetitorA", marketShare: "32%", growth: "+5.2%", strength: "Brand Recognition" },
+    { name: "CompetitorB", marketShare: "24%", growth: "+2.8%", strength: "Price Leadership" },
+    { name: "CompetitorC", marketShare: "18%", growth: "-1.2%", strength: "Product Range" },
   ];
 
   const trendData: DataPoint[] = [
     { label: "Jan", value: 65 },
     { label: "Feb", value: 72 },
     { label: "Mar", value: 68 },
-    { label: "Apr", value: 85 },
-    { label: "May", value: 82 },
-    { label: "Jun", value: 91 },
+    { label: "Apr", value: 78 },
+    { label: "May", value: 85 },
+    { label: "Jun", value: 82 },
   ];
 
-  const marketGrowth: DataPoint[] = [
-    { label: "Q1", value: 12 },
-    { label: "Q2", value: 18 },
-    { label: "Q3", value: 25 },
-    { label: "Q4", value: 32 },
+  const marketShareData: DataPoint[] = [
+    { label: "Q1", value: 22 },
+    { label: "Q2", value: 25 },
+    { label: "Q3", value: 28 },
+    { label: "Q4", value: 31 },
   ];
 
   const exportFields: FormField[] = [
-    { name: "format", label: "Export Format", type: "select", options: ["CSV", "PDF", "Excel"] },
-    { name: "dateRange", label: "Date Range", type: "select", options: ["Last 30 Days", "Last Quarter", "Last Year"] },
+    { name: "format", label: "Export Format", type: "select", options: ["CSV", "Excel", "PDF", "JSON"] },
+    { name: "dateRange", label: "Date Range", type: "select", options: ["Last 7 days", "Last 30 days", "Last 90 days", "All time"] },
     { name: "email", label: "Send to Email", type: "email" },
   ];
 
+  const handleNavClick = (item: NavItem) => {
+    setActiveNav(item.label);
+  };
+
   const handleExport = (data: Record<string, string>) => {
-    alert(`Exporting ${data.format} for ${data.dateRange} to ${data.email}`);
+    alert(`Exporting data: ${JSON.stringify(data)}`);
   };
 
   return (
     <div className="min-h-screen bg-gray-100">
-      <NavigationHeader
-        title="Market Research Tool"
-        items={navItems}
-        onNavClick={setActiveNav}
-      />
-      <main className="max-w-7xl mx-auto px-4 py-8">
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
-          <Card title="Total Responses" subtitle="Last 30 days">
-            <p className="text-3xl font-bold text-blue-600">6,530</p>
-            <p className="text-sm text-green-600 mt-2">↑ 12% from last month</p>
-          </Card>
-          <Card title="Avg Satisfaction" subtitle="Across all surveys">
-            <p className="text-3xl font-bold text-green-600">86.2%</p>
-            <p className="text-sm text-green-600 mt-2">↑ 3.5% improvement</p>
-          </Card>
-          <Card title="Market Position" subtitle="Industry ranking">
-            <p className="text-3xl font-bold text-purple-600">#2</p>
-            <p className="text-sm text-gray-500 mt-2">28% market share</p>
-          </Card>
+      <NavigationHeader title="Market Research Tool" navItems={navItems} onNavClick={handleNavClick} />
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
+          <div className="bg-white rounded-lg shadow p-4">
+            <p className="text-sm text-gray-500">Total Responses</p>
+            <p className="text-3xl font-bold text-gray-800">6,250</p>
+            <p className="text-sm text-green-600">+12% from last month</p>
+          </div>
+          <div className="bg-white rounded-lg shadow p-4">
+            <p className="text-sm text-gray-500">Avg Satisfaction</p>
+            <p className="text-3xl font-bold text-gray-800">84.6%</p>
+            <p className="text-sm text-green-600">+3.2% from last month</p>
+          </div>
+          <div className="bg-white rounded-lg shadow p-4">
+            <p className="text-sm text-gray-500">Market Position</p>
+            <p className="text-3xl font-bold text-gray-800">#2</p>
+            <p className="text-sm text-blue-600">26% market share</p>
+          </div>
         </div>
-
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
-          <LineChart title="Customer Satisfaction Trend" data={trendData} color="blue" />
-          <LineChart title="Market Growth (%)" data={marketGrowth} color="green" />
-        </div>
-
-        <div className="mb-8">
-          <Card title="Survey Results" subtitle="Latest survey responses and metrics">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+          <Card title="Survey Results">
             <Table columns={surveyColumns} data={surveyData} />
           </Card>
-        </div>
-
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
-          {competitors.map((comp) => (
-            <Card key={comp.name} title={comp.name} subtitle={`Market Share: ${comp.marketShare}`}>
-              <div className="space-y-2">
-                <div>
-                  <span className="text-sm font-medium text-gray-600">Strength: </span>
-                  <span className="text-sm text-green-600">{comp.strength}</span>
+          <Card title="Competitor Analysis">
+            <div className="space-y-3">
+              {competitors.map((comp, index) => (
+                <div key={index} className="p-3 bg-gray-50 rounded-lg border border-gray-200">
+                  <div className="flex justify-between items-center mb-2">
+                    <span className="font-semibold text-gray-800">{comp.name}</span>
+                    <span className={`text-sm ${comp.growth.startsWith("+") ? "text-green-600" : "text-red-600"}`}>
+                      {comp.growth}
+                    </span>
+                  </div>
+                  <div className="flex justify-between text-sm text-gray-600">
+                    <span>Market Share: {comp.marketShare}</span>
+                    <span>Strength: {comp.strength}</span>
+                  </div>
                 </div>
-                <div>
-                  <span className="text-sm font-medium text-gray-600">Weakness: </span>
-                  <span className="text-sm text-red-600">{comp.weakness}</span>
-                </div>
-              </div>
-            </Card>
-          ))}
-        </div>
-
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          <Card title="Export Data" subtitle="Download research data in various formats">
-            <Form fields={exportFields} onSubmit={handleExport} submitLabel="Export Data" />
-          </Card>
-          <Card title="Quick Stats" subtitle="Key performance indicators">
-            <div className="space-y-4">
-              <div className="flex justify-between items-center">
-                <span className="text-gray-600">Active Surveys</span>
-                <span className="font-semibold text-gray-800">12</span>
-              </div>
-              <div className="flex justify-between items-center">
-                <span className="text-gray-600">Competitors Tracked</span>
-                <span className="font-semibold text-gray-800">8</span>
-              </div>
-              <div className="flex justify-between items-center">
-                <span className="text-gray-600">Reports Generated</span>
-                <span className="font-semibold text-gray-800">47</span>
-              </div>
-              <div className="flex justify-between items-center">
-                <span className="text-gray-600">Data Points Collected</span>
-                <span className="font-semibold text-gray-800">125,000+</span>
-              </div>
+              ))}
             </div>
+          </Card>
+        </div>
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+          <Card title="Customer Satisfaction Trend">
+            <LineChart title="Monthly Satisfaction Score" data={trendData} color="#10B981" />
+          </Card>
+          <Card title="Market Share Growth">
+            <LineChart title="Quarterly Market Share %" data={marketShareData} color="#6366F1" />
+          </Card>
+        </div>
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          <Card title="Export Data" className="lg:col-span-1">
+            <Form fields={exportFields} onSubmit={handleExport} submitLabel="Export Report" />
+          </Card>
+          <Card title="Key Insights" className="lg:col-span-2">
+            <ul className="space-y-3">
+              <li className="flex items-start">
+                <span className="w-2 h-2 bg-green-500 rounded-full mt-2 mr-3"></span>
+                <span className="text-gray-700">Customer satisfaction has increased by 8% this quarter, driven by improved service response times.</span>
+              </li>
+              <li className="flex items-start">
+                <span className="w-2 h-2 bg-blue-500 rounded-full mt-2 mr-3"></span>
+                <span className="text-gray-700">Price perception remains a challenge - consider value messaging campaigns.</span>
+              </li>
+              <li className="flex items-start">
+                <span className="w-2 h-2 bg-yellow-500 rounded-full mt-2 mr-3"></span>
+                <span className="text-gray-700">CompetitorA is gaining market share through aggressive digital marketing.</span>
+              </li>
+              <li className="flex items-start">
+                <span className="w-2 h-2 bg-purple-500 rounded-full mt-2 mr-3"></span>
+                <span className="text-gray-700">Brand trust scores are strong - leverage for referral programs.</span>
+              </li>
+            </ul>
           </Card>
         </div>
       </main>
