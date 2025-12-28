@@ -220,7 +220,7 @@ const PriceAlerts: React.FC<{
     const currentPrice = alert.crypto === "bitcoin" ? prices.bitcoin?.usd : prices.ethereum?.usd;
     if (!currentPrice) return false;
     if (alert.condition === "above" && currentPrice >= alert.targetPrice) return true;
-    if (alert.condition === "below" && currentPrice <= alert.targetPrice) return true>;
+    if (alert.condition === "below" && currentPrice <= alert.targetPrice) return true;
     return false;
   };
 
