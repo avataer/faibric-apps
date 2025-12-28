@@ -194,7 +194,7 @@ const LiveCharts: React.FC<{ priceHistory: PriceHistory[] }> = ({ priceHistory }
 
 const PriceAlerts: React.FC<{
   alerts: PriceAlert[];
-  setAlerts: React.Dispatch<React.SetStateAction<PriceAlert[]>;
+  setAlerts: React.Dispatch<React.SetStateAction<PriceAlert[]>>;
   prices: CryptoPrice;
 }> = ({ alerts, setAlerts, prices }) => {
   const [newAlert, setNewAlert] = useState({ crypto: "bitcoin", targetPrice: "", condition: "above" as "above" | "below" });
@@ -220,7 +220,7 @@ const PriceAlerts: React.FC<{
     const currentPrice = alert.crypto === "bitcoin" ? prices.bitcoin?.usd : prices.ethereum?.usd;
     if (!currentPrice) return false;
     if (alert.condition === "above" && currentPrice >= alert.targetPrice) return true;
-    if (alert.condition === "below" && currentPrice <= alert.targetPrice) return true;
+    if (alert.condition === "below" && currentPrice <= alert.targetPrice) return true>;
     return false;
   };
 
