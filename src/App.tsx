@@ -59,18 +59,18 @@ const NavigationSidebar = ({
   onLogout: () => void;
 }) => {
   const navItems: NavItem[] = [
-    { id: "dashboard", label: "Dashboard", icon: "📊" },
-    { id: "prices", label: "Prices", icon: "💰" },
-    { id: "charts", label: "Charts", icon: "📈" },
-    { id: "portfolio", label: "Portfolio", icon: "💼" },
-    { id: "settings", label: "Settings", icon: "⚙️" },
+    { id: "dashboard", label: "Dashboard", icon: "chart" },
+    { id: "prices", label: "Prices", icon: "dollar" },
+    { id: "charts", label: "Charts", icon: "trending" },
+    { id: "portfolio", label: "Portfolio", icon: "briefcase" },
+    { id: "settings", label: "Settings", icon: "gear" },
   ];
 
   return (
     <div className="flex flex-col h-full">
       <div className="p-6 border-b border-gray-700">
         <h1 className="text-xl font-bold text-white flex items-center gap-2">
-          <span>🚀</span> CryptoTracker
+          <span></span> CryptoTracker
         </h1>
       </div>
       <nav className="flex-1 p-4 space-y-2">
@@ -94,7 +94,7 @@ const NavigationSidebar = ({
           onClick={onLogout}
           className="w-full flex items-center gap-3 px-4 py-3 text-gray-300 hover:bg-gray-800 rounded-lg transition-colors"
         >
-          <span>🚪</span>
+          <span></span>
           <span>Logout</span>
         </button>
       </div>
@@ -159,7 +159,7 @@ const LineChart = ({
       <div className="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-sm">
         <h3 className="text-lg font-semibold mb-4 text-gray-900 dark:text-white">{title}</h3>
         <div className="h-64 flex items-center justify-center">
-          <DataPlaceholder symbol="📊" />
+          <DataPlaceholder symbol="chart" />
         </div>
       </div>
     );
@@ -224,7 +224,7 @@ const CryptoTable = ({
   onSort: (column: string, direction: "asc" | "desc") => void;
 }) => {
   const [sortColumn, setSortColumn] = useState("marketCap");
-  const [sortDirection, setSortDirection] = useState<"asc" | "desc">("desc");
+  const [sortDirection, setSortDirection] = useState<"asc" | "desc">>("desc");
 
   const handleSort = (column: string) => {
     const newDirection = sortColumn === column && sortDirection === "desc" ? "asc" : "desc";
@@ -275,7 +275,7 @@ const CryptoTable = ({
             {loading ? (
               <tr>
                 <td colSpan={6} className="px-6 py-8 text-center">
-                  <DataPlaceholder symbol="📊" />
+                  <DataPlaceholder symbol="chart" />
                 </td>
               </tr>
             ) : data.length === 0 ? (
@@ -297,7 +297,7 @@ const CryptoTable = ({
                   <td className="px-6 py-4 whitespace-nowrap">
                     <div className="flex items-center gap-3">
                       <span className="text-2xl">
-                        {crypto.symbol === "btc" ? "₿" : crypto.symbol === "eth" ? "Ξ" : "🪙"}
+                        {crypto.symbol === "btc" ? "₿" : crypto.symbol === "eth" ? "Ξ" : ""}
                       </span>
                       <div>
                         <div className="text-sm font-medium text-gray-900 dark:text-white">{crypto.name}</div>
@@ -390,11 +390,11 @@ const SettingsView = () => {
 
 // Main App Component
 const App: React.FC = () => {
-  const [currentView, setCurrentView] = useState<string>("dashboard");
-  const [loading, setLoading] = useState<boolean>(true);
-  const [error, setError] = useState<Error | null>(null);
-  const [apiData, setApiData] = useState<Record<string, any>({});
-  const [chartData, setChartData] = useState<ChartDataPoint[]>([]);
+  const [currentView, setCurrentView] = useState<string>>("dashboard");
+  const [loading, setLoading] = useState<boolean>>(true);
+  const [error, setError] = useState<Error | null>>(null);
+  const [apiData, setApiData] = useState<Record<string, any>>({});
+  const [chartData, setChartData] = useState<ChartDataPoint[]>>([]);
 
   // Gateway fetch function
   const fetchFromGateway = async (service: string, endpoint: string) => {
@@ -536,7 +536,7 @@ const App: React.FC = () => {
         id: "updated",
         label: "Last Updated",
         value: apiData.lastUpdated ? new Date(apiData.lastUpdated).toLocaleTimeString() : "--:--:--",
-        icon: "🔄",
+        icon: null,
       },
     ];
   };
@@ -564,7 +564,7 @@ const App: React.FC = () => {
             </div>
             {error && (
               <div className="bg-red-100 text-red-700 px-4 py-2 rounded-lg flex items-center gap-2">
-                <span>⚠️</span>
+                <span></span>
                 <span>Error loading data</span>
                 <button 
                   onClick={() => setCurrentView("settings")}
