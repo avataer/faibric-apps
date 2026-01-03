@@ -131,7 +131,7 @@ const DashboardView = ({
         </button>
       </div>
     </div>
-</div>
+
 
   );
 };
@@ -344,7 +344,7 @@ function _OriginalApp() {
   );
 }
 
-</div>
+
 
 
 
