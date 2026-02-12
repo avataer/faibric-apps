@@ -7,10 +7,10 @@ const Navigation = ({ currentView, onNavigate }) => {
   const navItems = [{"id": "menu", "label": "Our Menu"}, {"id": "about", "label": "Our Story"}, {"id": "brunch", "label": "Brunch"}, {"id": "visit", "label": "Visit Us"}];
 
   return (
-    <nav className="bg-white shadow-md sticky top-0 z-50">
+    <nav className="bg-amber-900 shadow-md sticky top-0 z-50">
       <div className="max-w-7xl mx-auto px-4">
         <div className="flex justify-between items-center h-16">
-          <span className="text-xl font-bold text-gray-900">Bean & Brew</span>
+          <span className="text-xl font-bold text-amber-50">Bean & Brew</span>
 
           <div className="hidden md:flex items-center gap-8">
             {(navItems || []).map(item => (
@@ -19,8 +19,8 @@ const Navigation = ({ currentView, onNavigate }) => {
                 onClick={() => onNavigate(item.id)}
                 className={`text-sm font-medium transition-colors ${
                   currentView === item.id
-                    ? "text-indigo-600"
-                    : "text-gray-600 hover:text-indigo-600"
+                    ? "text-amber-200"
+                    : "text-amber-100 hover:text-amber-200"
                 }`}
               >
                 {item.label}
@@ -29,7 +29,7 @@ const Navigation = ({ currentView, onNavigate }) => {
           </div>
 
           <button
-            className="md:hidden p-2"
+            className="md:hidden p-2 text-amber-50"
             onClick={() => setIsOpen(!isOpen)}
           >
             <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -48,7 +48,7 @@ const Navigation = ({ currentView, onNavigate }) => {
                 key={item.id}
                 onClick={() => { onNavigate(item.id); setIsOpen(false); }}
                 className={`block w-full text-left py-2 px-4 ${
-                  currentView === item.id ? "text-indigo-600 bg-indigo-50" : "text-gray-600"
+                  currentView === item.id ? "text-amber-200 bg-amber-800" : "text-amber-100"
                 }`}
               >
                 {item.label}
@@ -64,13 +64,14 @@ const Navigation = ({ currentView, onNavigate }) => {
 const HeroSection = ({ onNavigate }) => {
   const cards = [{"title": "Specialty Espresso", "description": "Single-origin beans roasted in small batches and pulled to perfection by our skilled baristas. From velvety lattes to bold ristrettos, every sip is an experience.", "cta": "Explore Our Coffees"}, {"title": "Artisan Pastries", "description": "Baked fresh each morning using locally sourced ingredients. Enjoy buttery croissants, almond tarts, and seasonal creations that pair beautifully with your favorite brew.", "cta": "See the Pastry Case"}, {"title": "Light Brunch", "description": "Savor wholesome brunch plates designed to complement your coffee ritual. From avocado toast to eggs Benedict, our kitchen serves comfort with every plate.", "cta": "View Brunch Menu"}, {"title": "A Warm Welcome", "description": "Settle into our inviting atmosphere with exposed wood, soft lighting, and the rich aroma of freshly ground coffee. Bean & Brew is your home away from home.", "cta": "Plan Your Visit"}];
   return (
-    <section className="min-h-screen bg-gradient-to-b from-gray-50 to-white py-20">
+    <section className="min-h-screen bg-gradient-to-b from-amber-100 to-amber-50 py-20">
       <div className="max-w-7xl mx-auto px-6">
         <div className="text-center mb-16">
-          <h1 className="text-5xl md:text-6xl font-bold text-gray-900 mb-6">
+          <h1 className="text-5xl md:text-6xl font-bold text-amber-900 mb-6">
             Where Every Cup Tells a Story
           </h1>
-          <p className="text-xl text-gray-600 max-w-2xl mx-auto">
+          <p className="text-2xl font-medium text-amber-700 italic">Fresh Brews, Warm Hearts</p>
+          <p className="text-xl text-stone-700 max-w-2xl mx-auto mt-4">
             Handcrafted espresso, freshly baked pastries, and a warm brunch experience crafted with care in our cozy corner of the neighborhood.
           </p>
         </div>
@@ -78,16 +79,16 @@ const HeroSection = ({ onNavigate }) => {
           {(cards || []).map((card, index) => (
             <div
               key={index}
-              className="bg-white p-8 rounded-2xl shadow-xl hover:shadow-2xl transition-all duration-300 border border-gray-100 group hover:-translate-y-2"
+              className="bg-amber-50 p-8 rounded-2xl shadow-xl hover:shadow-2xl transition-all duration-300 border border-amber-200 group hover:-translate-y-2"
             >
-              <div className="w-16 h-16 bg-gradient-to-br from-violet-500 to-purple-600 rounded-2xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
+              <div className="w-16 h-16 bg-gradient-to-br from-amber-500 to-amber-700 rounded-2xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
                 <span className="text-2xl font-bold text-white">{index + 1}</span>
               </div>
-              <h3 className="text-2xl font-bold text-gray-900 mb-3">{card.title}</h3>
-              <p className="text-gray-600 mb-6">{card.description}</p>
+              <h3 className="text-2xl font-bold text-amber-900 mb-3">{card.title}</h3>
+              <p className="text-stone-700 mb-6">{card.description}</p>
               <button
                 onClick={() => onNavigate && onNavigate("contact")}
-                className="text-violet-600 font-semibold hover:text-violet-700 inline-flex items-center"
+                className="text-amber-700 font-semibold hover:text-amber-800 inline-flex items-center"
               >
                 {card.cta || "Learn more"} →
               </button>
@@ -101,16 +102,16 @@ const HeroSection = ({ onNavigate }) => {
 
 const FooterSection = () => {
   return (
-    <footer className="bg-gray-900 text-white py-12">
+    <footer className="bg-amber-950 text-white py-12">
       <div className="max-w-6xl mx-auto px-4">
         <div className="text-center">
           <h3 className="text-2xl font-bold mb-2">Bean & Brew</h3>
-          <p className="text-gray-400 mb-6">Handcrafted coffee, baked-fresh pastries, and a place to slow down and savor the moment.</p>
-          <div className="border-t border-gray-800 pt-6">
-            <p className="text-gray-500 text-sm">
+          <p className="text-amber-300 mb-6">Handcrafted coffee, baked-fresh pastries, and a place to slow down and savor the moment.</p>
+          <div className="border-t border-amber-800 pt-6">
+            <p className="text-amber-400 text-sm">
               2024 Bean & Brew. All rights reserved.
             </p>
-            <p className="text-gray-600 text-xs mt-2">Built with Faibric</p>
+            <p className="text-amber-500 text-xs mt-2">Built with Faibric</p>
           </div>
         </div>
       </div>
@@ -129,11 +130,11 @@ function _OriginalApp() {
   };
 
   return (
-    <div className="min-h-screen bg-white">
+    <div className="min-h-screen bg-amber-50">
       <Navigation currentView={currentView} onNavigate={handleNavigate} />
 
       <main>
-        
+
         {currentView === "hero" && <HeroSection onNavigate={handleNavigate} />}
       </main>
 
