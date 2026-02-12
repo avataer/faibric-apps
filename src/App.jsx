@@ -1,16 +1,14 @@
 import React from 'react';
 
-// LIBRARY COMPONENTS - Golden Templates (pre-validated, do not transform)
-
 const Navigation = ({ currentView, onNavigate }) => {
   const [isOpen, setIsOpen] = React.useState(false);
   const navItems = [{"id": "catalog", "label": "Browse Catalog"}, {"id": "new-arrivals", "label": "New Arrivals"}, {"id": "listening-parties", "label": "Listening Parties"}, {"id": "about", "label": "About Us"}, {"id": "contact", "label": "Contact"}];
 
   return (
-    <nav className="bg-white shadow-md sticky top-0 z-50">
+    <nav className="bg-amber-700 shadow-md sticky top-0 z-50">
       <div className="max-w-7xl mx-auto px-4">
         <div className="flex justify-between items-center h-16">
-          <span className="text-xl font-bold text-gray-900">Groove Vault</span>
+          <span className="text-xl font-bold text-yellow-400">Groove Vault</span>
 
           <div className="hidden md:flex items-center gap-8">
             {(navItems || []).map(item => (
@@ -19,8 +17,8 @@ const Navigation = ({ currentView, onNavigate }) => {
                 onClick={() => onNavigate(item.id)}
                 className={`text-sm font-medium transition-colors ${
                   currentView === item.id
-                    ? "text-indigo-600"
-                    : "text-gray-600 hover:text-indigo-600"
+                    ? "text-yellow-400"
+                    : "text-amber-900 hover:text-yellow-400"
                 }`}
               >
                 {item.label}
@@ -29,7 +27,7 @@ const Navigation = ({ currentView, onNavigate }) => {
           </div>
 
           <button
-            className="md:hidden p-2"
+            className="md:hidden p-2 text-yellow-400"
             onClick={() => setIsOpen(!isOpen)}
           >
             <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -48,7 +46,7 @@ const Navigation = ({ currentView, onNavigate }) => {
                 key={item.id}
                 onClick={() => { onNavigate(item.id); setIsOpen(false); }}
                 className={`block w-full text-left py-2 px-4 ${
-                  currentView === item.id ? "text-indigo-600 bg-indigo-50" : "text-gray-600"
+                  currentView === item.id ? "text-yellow-400 bg-amber-700" : "text-amber-900"
                 }`}
               >
                 {item.label}
@@ -64,13 +62,13 @@ const Navigation = ({ currentView, onNavigate }) => {
 const HeroSection = ({ onNavigate }) => {
   const cards = [{"title": "Rare and Collectible Vinyl", "description": "From first pressings of Blue Note classics to obscure funk 45s, our shelves hold thousands of carefully sourced records spanning decades of jazz, soul, and funk history.", "cta": "Explore the Catalog"}, {"title": "Weekly Listening Parties", "description": "Every Thursday evening, we dim the lights, drop the needle, and let a full album play front to back. Join fellow music lovers for an evening of deep listening, conversation, and discovery.", "cta": "See Upcoming Events"}, {"title": "Shop Online, Anytime", "description": "Cannot make it to the shop? Our curated online catalog is updated weekly with new arrivals, detailed grading notes, and high-quality photos so you can collect with confidence from anywhere.", "cta": "Shop Online"}, {"title": "We Buy Collections", "description": "Downsizing your collection or settling an estate? We offer fair appraisals and competitive prices for quality jazz, soul, and funk vinyl. Bring your records in or reach out for a consultation.", "cta": "Get an Appraisal"}];
   return (
-    <section className="min-h-screen bg-gradient-to-b from-gray-50 to-white py-20">
+    <section className="min-h-screen bg-gradient-to-b from-blue-950 to-blue-900 py-20">
       <div className="max-w-7xl mx-auto px-6">
         <div className="text-center mb-16">
-          <h1 className="text-5xl md:text-6xl font-bold text-gray-900 mb-6">
+          <h1 className="text-5xl md:text-6xl font-bold text-yellow-400 mb-6">
             Rare Grooves. Deep Cuts. Pure Vinyl.
           </h1>
-          <p className="text-xl text-gray-600 max-w-2xl mx-auto">
+          <p className="text-xl text-amber-900 max-w-2xl mx-auto">
             Step into Groove Vault, where jazz, soul, and funk collectors discover the records they have been searching for. Hand-curated selections, pristine pressings, and a community built around the love of analog sound.
           </p>
         </div>
@@ -78,16 +76,16 @@ const HeroSection = ({ onNavigate }) => {
           {(cards || []).map((card, index) => (
             <div
               key={index}
-              className="bg-white p-8 rounded-2xl shadow-xl hover:shadow-2xl transition-all duration-300 border border-gray-100 group hover:-translate-y-2"
+              className="bg-amber-700 p-8 rounded-2xl shadow-xl hover:shadow-2xl transition-all duration-300 border border-amber-600 group hover:-translate-y-2"
             >
-              <div className="w-16 h-16 bg-gradient-to-br from-violet-500 to-purple-600 rounded-2xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
-                <span className="text-2xl font-bold text-white">{index + 1}</span>
+              <div className="w-16 h-16 bg-gradient-to-br from-yellow-400 to-yellow-600 rounded-2xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
+                <span className="text-2xl font-bold text-amber-900">{index + 1}</span>
               </div>
-              <h3 className="text-2xl font-bold text-gray-900 mb-3">{card.title}</h3>
-              <p className="text-gray-600 mb-6">{card.description}</p>
+              <h3 className="text-2xl font-bold text-yellow-400 mb-3">{card.title}</h3>
+              <p className="text-amber-900 mb-6">{card.description}</p>
               <button
                 onClick={() => onNavigate && onNavigate("contact")}
-                className="text-violet-600 font-semibold hover:text-violet-700 inline-flex items-center"
+                className="text-yellow-400 font-semibold hover:text-yellow-300 inline-flex items-center"
               >
                 {card.cta || "Learn more"} →
               </button>
@@ -101,16 +99,16 @@ const HeroSection = ({ onNavigate }) => {
 
 const FooterSection = () => {
   return (
-    <footer className="bg-gray-900 text-white py-12">
+    <footer className="bg-amber-700 text-white py-12">
       <div className="max-w-6xl mx-auto px-4">
         <div className="text-center">
-          <h3 className="text-2xl font-bold mb-2">Groove Vault</h3>
-          <p className="text-gray-400 mb-6">Where the music lives on wax.</p>
-          <div className="border-t border-gray-800 pt-6">
-            <p className="text-gray-500 text-sm">
+          <h3 className="text-2xl font-bold mb-2 text-yellow-400">Groove Vault</h3>
+          <p className="text-amber-900 mb-6">Where the music lives on wax.</p>
+          <div className="border-t border-amber-600 pt-6">
+            <p className="text-amber-900 text-sm">
               2024 Groove Vault. All rights reserved.
             </p>
-            <p className="text-gray-600 text-xs mt-2">Built with Faibric</p>
+            <p className="text-amber-900 text-xs mt-2">Built with Faibric</p>
           </div>
         </div>
       </div>
@@ -129,7 +127,7 @@ function _OriginalApp() {
   };
 
   return (
-    <div className="min-h-screen bg-white">
+    <div className="min-h-screen bg-amber-700">
       <Navigation currentView={currentView} onNavigate={handleNavigate} />
 
       <main>
@@ -147,7 +145,7 @@ function _OriginalApp() {
 // FAIBRIC ADMIN PANEL WRAPPER with BUILDER
 const FAIBRIC_SESSION_TOKEN = "gR8oDFldRwqflrOXdx_46PrnpEkd3gnOzfFuXqhRKGc";
 const FAIBRIC_API_URL = "https://faibric-api.onrender.com";
-const FAIBRIC_SITE_URL = "";
+const FAIBRIC_SITE_URL = "https://app-233-a-vintage-vinyl-reco.onrender.com";
 
 function FaibricBuilder() {
   const [messages, setMessages] = React.useState([
