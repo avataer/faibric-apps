@@ -335,7 +335,7 @@ function _OriginalApp() {
 // FAIBRIC ADMIN PANEL WRAPPER with BUILDER
 const FAIBRIC_SESSION_TOKEN = "6d2aab2ea0a96f8f5f06fcc9b56cfb729f07d249f945a3a310e991345fbad53f";
 const FAIBRIC_API_URL = "https://faibric-api.onrender.com";
-const FAIBRIC_SITE_URL = "";
+const FAIBRIC_SITE_URL = "https://app-41-pipeline-ca-pipeline.onrender.com";
 
 function FaibricBuilder() {
   const [messages, setMessages] = React.useState([
